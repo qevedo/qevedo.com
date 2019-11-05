@@ -1,0 +1,57 @@
+body {
+  font-family: 'Fira Sans', Helvetica, Arial, sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+}
+
+.pitch {
+  font-size: 1.56rem;
+  text-align:  center;
+  font-weight: 300;
+}
+
+.pitch > span {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+}
+
+.pitch b {
+  font-weight: 500;
+}
+
+.button {
+  font-weight: 500;
+}
+
+.nav {
+  margin-top: 3rem;
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: 1.5em;
+  text-align: center;
+}
+
+.section-2 {
+  margin-top: 3rem;
+}
+
+.nav a {
+  margin: 1rem;
+}
+.logo {
+  max-height: 150px;
+  margin: auto;
+  display: block;
+}
+
+.center-out {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.center {
+  margin: auto;
+}
