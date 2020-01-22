@@ -1,0 +1,14 @@
+
+Hope you enjoy your new logo, here are the people that
+made your beautiful logo happen :)
+font name: TruenoRg
+font link: https://fontlibrary.org/en/font/trueno
+font author: Julieta Ulanovsky
+font author site: http://www.zkysky.com.ar/
+
+
+icon designer: melissa zeta
+icon designer link: /mzeta
+        
+{"bg-gradient-0":"#0D7CE9","bg-gradient-1":"#15CFF1","icon":"#ffffff","font":"#ffffff","slogan":"#ffffff"}
+      
