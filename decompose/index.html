@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gate Decomposition Playground</title>
+<meta name="description" content="Pick a device's native gates and decompose any quantum gate into them, with the fewest gates. Runs in your browser.">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;500&family=Fira+Code:wght@400&display=swap">
+<style>
+/* One column: native gates, the gate, then the result (counts, circuit, OpenQASM). */
+:root {
+  --bg: #fbfbfd;
+  --fg: #15181e;
+  --muted: #5b6270;
+  --line: #e2e5eb;
+  --code: #f0f2f6;
+  --accent: #0b6fd0;
+  --good: #1a7f45;
+  --bad: #b3261e;
+  --sans: "Fira Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Fira Code", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --fg: #e6e9ef; --muted: #98a0ae; --line: #252a33; --code: #181c22;
+    --accent: #5cb2ff; --good: #5fd08a; --bad: #ff8a80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --fg: #e6e9ef; --muted: #98a0ae; --line: #252a33; --code: #181c22;
+  --accent: #5cb2ff; --good: #5fd08a; --bad: #ff8a80;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 300 1rem/1.6 var(--sans); }
+main { max-width: 52rem; margin: 0 auto; padding: 3rem 1.25rem; display: grid; gap: 2.5rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+h1 { margin: 0; font-weight: 500; font-size: 1.75rem; line-height: 1.25; text-wrap: balance; }
+h2 { margin: 0; font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+p { margin: 0; }
+b { font-weight: 500; }
+code, pre, input, textarea { font-family: var(--mono); font-size: 0.875rem; }
+section { display: grid; gap: 1rem; min-width: 0; }
+
+header { display: grid; gap: 1rem; }
+.wordmark { width: 6.5rem; height: auto; display: block; color: var(--fg); }
+.lead { color: var(--muted); max-width: 40rem; }
+
+/* Choice chips: radio buttons styled as a row of toggles. */
+.group { display: grid; gap: 0.5rem; }
+.group > span { font-size: 0.875rem; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chips label { position: relative; }
+.chips input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chips span {
+  display: inline-block; padding: 0.3rem 0.75rem; border: 1px solid var(--line); border-radius: 999px;
+  font-family: var(--mono); font-size: 0.8125rem; cursor: pointer; user-select: none;
+}
+.chips input:checked + span { border-color: var(--accent); color: var(--accent); font-weight: 400; background: var(--code); }
+.chips input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.status { font-size: 0.875rem; }
+#result { transition: opacity 0.15s; }
+#result.busy { opacity: 0.45; }
+@media (prefers-reduced-motion: reduce) { #result { transition: none; } }
+.status.warn { color: var(--bad); }
+
+.tabs { display: flex; gap: 1.25rem; border-bottom: 1px solid var(--line); }
+.tabs button {
+  font: 500 0.9375rem var(--sans); background: none; border: 0; padding: 0 0 0.5rem; color: var(--muted);
+  cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.field { display: grid; gap: 0.5rem; }
+input[type="text"], textarea {
+  width: 100%; color: var(--fg); background: var(--code); border: 1px solid var(--line);
+  border-radius: 6px; padding: 0.625rem 0.75rem;
+}
+textarea { min-height: 7.5rem; resize: vertical; line-height: 1.5; }
+.examples { display: flex; flex-wrap: wrap; gap: 0.375rem 0.75rem; font-size: 0.875rem; color: var(--muted); }
+.examples button {
+  font: 400 0.8125rem var(--mono); color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer;
+}
+.examples button:hover { text-decoration: underline; }
+.hint { font-size: 0.8125rem; color: var(--muted); }
+
+.summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 1.5rem; }
+.big { font-size: 2rem; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; }
+.big small { font-size: 0.9375rem; font-weight: 300; color: var(--muted); margin-left: 0.25rem; }
+.counts { display: flex; flex-wrap: wrap; gap: 0.5rem; font-family: var(--mono); font-size: 0.8125rem; color: var(--muted); }
+.check { font-size: 0.9375rem; }
+.check.good::before { content: "✓ "; color: var(--good); font-weight: 500; }
+.check.bad { color: var(--bad); }
+.error { color: var(--bad); font-size: 0.9375rem; }
+
+.circuit { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem 0.5rem; }
+.circuit svg { display: block; }
+.circuit .wire { stroke: var(--muted); stroke-width: 1; }
+.circuit .label { fill: var(--muted); font: 400 12px var(--mono); }
+.circuit .box { fill: var(--bg); stroke: var(--fg); stroke-width: 1.25; }
+.circuit .name { fill: var(--fg); font: 400 12px var(--mono); }
+.circuit .param { fill: var(--muted); font: 400 10px var(--mono); }
+.circuit .dot { fill: var(--fg); }
+.circuit .link { stroke: var(--fg); stroke-width: 1.25; }
+.circuit .target { fill: var(--bg); stroke: var(--fg); stroke-width: 1.25; }
+
+pre { margin: 0; background: var(--code); border-radius: 6px; padding: 1rem; overflow-x: auto; line-height: 1.55; }
+.qasm { display: grid; gap: 0.5rem; }
+.qasm-head { display: flex; justify-content: space-between; align-items: baseline; }
+.copy {
+  font: 500 0.75rem var(--sans); color: var(--muted); background: none; border: 1px solid var(--line);
+  border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer;
+}
+.copy:hover { color: var(--fg); }
+
+footer { border-top: 1px solid var(--line); padding-top: 1.25rem; color: var(--muted); font-size: 0.875rem; display: grid; gap: 0.5rem; }
+@media (max-width: 30rem) {
+  main { padding-top: 2rem; gap: 2rem; }
+  h1 { font-size: 1.4rem; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="/" aria-label="Qevedo home"><svg class="wordmark" viewBox="0 0 252.1 60" role="img" aria-label="Qevedo"><g fill="currentColor" transform="matrix(4.784689009770447,0,0,4.784689009770447,-2.296649545305371,-17.70334884904667)"><path d="M0.48 9.18C0.48 11.98 2.73 14.14 5.66 14.15C6.44 15.47 7.55 16.24 8.78 16.24C9.69 16.24 10.68 15.83 11.44 15.16L10.78 14C10.14 14.50 9.49 14.81 8.97 14.81C8.41 14.81 7.87 14.48 7.34 13.90C9.42 13.26 10.86 11.42 10.86 9.18C10.86 6.38 8.60 4.24 5.67 4.24C2.74 4.24 0.48 6.37 0.48 9.18ZM2.16 9.18C2.16 7.24 3.75 5.73 5.68 5.73C7.60 5.73 9.17 7.24 9.17 9.18C9.17 11.13 7.60 12.67 5.68 12.67C3.77 12.67 2.16 11.13 2.16 9.18ZM12.04 10.37C12.04 12.61 13.55 14.14 15.85 14.14C17.14 14.14 18.20 13.68 18.93 12.88L18.07 11.97C17.53 12.53 16.79 12.84 15.97 12.84C14.80 12.84 13.92 12.12 13.66 10.98L19.29 10.98C19.49 8.29 18.42 6.58 15.81 6.58C13.59 6.59 12.04 8.12 12.04 10.37ZM13.64 9.80C13.82 8.61 14.64 7.87 15.82 7.87C17.04 7.87 17.84 8.60 17.89 9.80ZM19.80 6.64L22.68 14.08L24.35 14.08L27.20 6.64L25.59 6.64L23.55 12.50L21.48 6.64ZM27.62 10.37C27.62 12.61 29.13 14.14 31.43 14.14C32.72 14.14 33.78 13.68 34.51 12.88L33.66 11.97C33.11 12.53 32.37 12.84 31.56 12.84C30.38 12.84 29.50 12.12 29.25 10.98L34.87 10.98C35.07 8.29 34.01 6.58 31.39 6.58C29.18 6.59 27.62 8.12 27.62 10.37ZM29.22 9.80C29.40 8.61 30.23 7.87 31.40 7.87C32.62 7.87 33.42 8.60 33.47 9.80ZM35.85 10.33C35.85 12.60 37.28 14.15 39.42 14.15C40.61 14.15 41.51 13.68 42.04 12.81L42.04 14.08L43.65 14.08L43.65 3.70L42.04 3.70L42.04 7.92C41.50 7.06 40.60 6.57 39.40 6.57C37.30 6.57 35.85 8.09 35.85 10.33ZM37.46 10.39C37.48 8.96 38.42 7.94 39.76 7.94C41.10 7.94 42.04 8.95 42.04 10.39C42.04 11.80 41.10 12.81 39.76 12.81C38.40 12.81 37.48 11.80 37.46 10.39ZM45.40 10.36C45.40 12.60 46.98 14.14 49.29 14.14C51.59 14.14 53.17 12.60 53.17 10.36C53.17 8.11 51.59 6.58 49.29 6.58C46.98 6.58 45.40 8.11 45.40 10.36ZM47.01 10.37C47.01 8.95 47.95 7.97 49.29 7.97C50.62 7.97 51.56 8.95 51.56 10.37C51.56 11.82 50.62 12.80 49.29 12.80C47.95 12.80 47.01 11.82 47.01 10.37Z"></path></g></svg></a>
+    <h1>Gate decomposition playground</h1>
+    <p class="lead">Pick a device's native gates and decompose any gate into them, with the fewest gates. It runs in your browser: the <a href="https://github.com/qevedo/qevedo-compiler">QCC</a> core, compiled from Rust to WebAssembly.</p>
+  </header>
+
+  <section aria-labelledby="native-title">
+    <h2 id="native-title">Native gates</h2>
+    <p class="hint">Select any combination: the compiler uses whichever of them gives the fewest gates.</p>
+    <div class="group">
+      <span id="basis-1q">Single-qubit</span>
+      <div class="chips" id="chips-1q" aria-labelledby="basis-1q">
+        <label><input type="checkbox" value="rz" checked><span>rz(θ)</span></label>
+        <label><input type="checkbox" value="p"><span>p(λ)</span></label>
+        <label><input type="checkbox" value="rx"><span>rx(θ)</span></label>
+        <label><input type="checkbox" value="ry"><span>ry(θ)</span></label>
+        <label><input type="checkbox" value="u3"><span>u3(θ,φ,λ)</span></label>
+        <label><input type="checkbox" value="sx" checked><span>sx</span></label>
+        <label><input type="checkbox" value="x" checked><span>x</span></label>
+        <label><input type="checkbox" value="h"><span>h</span></label>
+        <label><input type="checkbox" value="s"><span>s</span></label>
+        <label><input type="checkbox" value="t"><span>t</span></label>
+      </div>
+    </div>
+    <div class="group">
+      <span id="basis-2q">Two-qubit</span>
+      <div class="chips" id="chips-2q" aria-labelledby="basis-2q">
+        <label><input type="checkbox" value="cx" checked><span>cx</span></label>
+        <label><input type="checkbox" value="cz"><span>cz</span></label>
+        <label><input type="checkbox" value="ecr"><span>ecr</span></label>
+        <label><input type="checkbox" value="cy"><span>cy</span></label>
+        <label><input type="checkbox" value="ch"><span>ch</span></label>
+        <label><input type="checkbox" value="cp"><span>cp(λ)</span></label>
+        <label><input type="checkbox" value="rzz"><span>rzz(θ)</span></label>
+        <label><input type="checkbox" value="rxx"><span>rxx(θ)</span></label>
+        <label><input type="checkbox" value="ryy"><span>ryy(θ)</span></label>
+        <label><input type="checkbox" value="rzx"><span>rzx(θ)</span></label>
+        <label><input type="checkbox" value="iswap"><span>iswap</span></label>
+        <label><input type="checkbox" value="sqrt_iswap"><span>√iswap</span></label>
+        <label><input type="checkbox" value="sqrt_swap"><span>√swap</span></label>
+      </div>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </section>
+
+  <section aria-labelledby="input-title">
+    <h2 id="input-title">Decompose</h2>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-gate" aria-selected="true" aria-controls="panel-gate">A gate</button>
+      <button type="button" role="tab" id="tab-unitary" aria-selected="false" aria-controls="panel-unitary">A unitary</button>
+    </div>
+    <div class="field" id="panel-gate" role="tabpanel" aria-labelledby="tab-gate">
+      <input type="text" id="gate" value="iswap" spellcheck="false" autocomplete="off" aria-label="Gate, with parameters" list="gate-names">
+      <datalist id="gate-names"></datalist>
+      <div class="examples"><span>Try</span>
+        <button type="button">swap</button><button type="button">iswap</button><button type="button">ccx</button>
+        <button type="button">cswap</button><button type="button">crz(pi/3)</button><button type="button">cu(pi/2, pi/4, 0, 0)</button>
+        <button type="button">rxx(pi/4)</button><button type="button">sqrt_swap</button><button type="button">sqrt_iswap</button>
+        <button type="button">h</button>
+      </div>
+      <p class="hint">Any gate of OpenQASM's <code>stdgates.inc</code> or <code>qelib1.inc</code>, or <code>sqrt_swap</code> and <code>sqrt_iswap</code>. Parameters can use <code>pi</code>, <code>+ − × ÷</code> and <code>sqrt</code>, <code>sin</code>, <code>cos</code>.</p>
+    </div>
+    <div class="field" id="panel-unitary" role="tabpanel" aria-labelledby="tab-unitary" hidden>
+      <textarea id="unitary" spellcheck="false" aria-label="Unitary matrix, one row per line"></textarea>
+      <div class="examples"><span>Fill in</span>
+        <button type="button" data-matrix="random2">a random 2×2</button>
+        <button type="button" data-matrix="random4">a random 4×4</button>
+        <button type="button" data-matrix="sqrtswap">√SWAP</button>
+        <button type="button" data-matrix="hadamard">H</button>
+      </div>
+      <p class="hint">One row per line, entries separated by commas. Complex entries like <code>0.5 - 0.5i</code> or <code>exp(i*pi/4)/sqrt(2)</code>. The first row and column belong to the first qubit, <code>q[0]</code>.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="result-title" aria-live="polite">
+    <h2 id="result-title">Result</h2>
+    <div id="result"><p class="hint">Loading the compiler…</p></div>
+  </section>
+
+  <footer>
+    <p>Single-qubit gates use an Euler decomposition, which is optimal for each basis. Two-qubit gates use a KAK decomposition with the minimal number of two-qubit gates (at most 3 for CX-like and Ising gates), or the gate's textbook definition when that is shorter. For iSWAP, √iSWAP and √SWAP the decomposition is found numerically, with the fewest uses the search reaches (√SWAP can need up to 6). <code>ccx</code> and <code>cswap</code> use their textbook definitions.</p>
+    <p><a href="/">qevedo.com</a> · <a href="https://github.com/qevedo/qevedo-compiler">Source</a> · <code>pip install qevedo-compiler</code></p>
+  </footer>
+</main>
+<script>
+"use strict";
+
+// -- The compiler: the QCC core as a WebAssembly module ---------------------------------
+
+let core = null;
+
+async function loadCore() {
+  const response = await fetch("qcc.wasm");
+  const { instance } = await WebAssembly.instantiate(await response.arrayBuffer(), {});
+  core = instance.exports;
+}
+
+function callCore(request) {
+  const input = new TextEncoder().encode(request);
+  const ptr = core.alloc(input.length);
+  new Uint8Array(core.memory.buffer, ptr, input.length).set(input);
+  const out = core.decompose(ptr, input.length);
+  core.dealloc(ptr, input.length);
+  const length = new DataView(core.memory.buffer).getUint32(out, true);
+  const text = new TextDecoder().decode(new Uint8Array(core.memory.buffer, out + 4, length));
+  core.dealloc(out, length + 4);
+  return JSON.parse(text);
+}
+
+// -- Complex expressions: numbers, pi, i, + - * / ^, sqrt, sin, cos, exp --------------------
+
+const C = (re, im = 0) => ({ re, im });
+const ops = {
+  add: (a, b) => C(a.re + b.re, a.im + b.im),
+  sub: (a, b) => C(a.re - b.re, a.im - b.im),
+  mul: (a, b) => C(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re),
+  div: (a, b) => {
+    const d = b.re * b.re + b.im * b.im;
+    if (d === 0) throw new Error("division by zero");
+    return C((a.re * b.re + a.im * b.im) / d, (a.im * b.re - a.re * b.im) / d);
+  },
+};
+const functions = {
+  sqrt: (z) => { const r = Math.hypot(z.re, z.im), t = Math.atan2(z.im, z.re); return C(Math.sqrt(r) * Math.cos(t / 2), Math.sqrt(r) * Math.sin(t / 2)); },
+  exp: (z) => C(Math.exp(z.re) * Math.cos(z.im), Math.exp(z.re) * Math.sin(z.im)),
+  sin: (z) => C(Math.sin(z.re) * Math.cosh(z.im), Math.cos(z.re) * Math.sinh(z.im)),
+  cos: (z) => C(Math.cos(z.re) * Math.cosh(z.im), -Math.sin(z.re) * Math.sinh(z.im)),
+};
+
+function evaluate(text) {
+  const tokens = text.match(/\d*\.?\d+(?:e[+-]?\d+)?|[a-zA-Zπ]+|\S/g) || [];
+  let pos = 0;
+  const peek = () => tokens[pos];
+  const take = (t) => { if (tokens[pos] !== t) throw new Error(`expected '${t}'`); pos++; };
+  function sum() {
+    let v = product();
+    while (peek() === "+" || peek() === "-") v = tokens[pos++] === "+" ? ops.add(v, product()) : ops.sub(v, product());
+    return v;
+  }
+  function product() {
+    let v = unary();
+    for (;;) {
+      if (peek() === "*" || peek() === "×") { pos++; v = ops.mul(v, unary()); }
+      else if (peek() === "/" || peek() === "÷") { pos++; v = ops.div(v, unary()); }
+      else if (peek() !== undefined && /^[a-zA-Zπ(]|^\d|^\./.test(peek())) v = ops.mul(v, unary()); // 2pi, 3i
+      else return v;
+    }
+  }
+  function unary() {
+    if (peek() === "-" || peek() === "−") { pos++; return ops.sub(C(0), unary()); }
+    if (peek() === "+") { pos++; return unary(); }
+    return power();
+  }
+  function power() {
+    const base = atom();
+    if (peek() !== "^") return base;
+    pos++;
+    const e = unary();
+    if (base.im !== 0 || e.im !== 0) throw new Error("powers must be real");
+    return C(Math.pow(base.re, e.re));
+  }
+  function atom() {
+    const t = tokens[pos++];
+    if (t === undefined) throw new Error("the expression ends too early");
+    if (t === "(") { const v = sum(); take(")"); return v; }
+    if (/^\d|^\./.test(t)) return C(parseFloat(t));
+    const name = t.toLowerCase();
+    if (name === "pi" || t === "π") return C(Math.PI);
+    if (name === "i" || name === "j") return C(0, 1);
+    if (name === "e") return C(Math.E);
+    if (functions[name]) { take("("); const v = sum(); take(")"); return functions[name](v); }
+    throw new Error(`unknown name '${t}'`);
+  }
+  const value = sum();
+  if (pos < tokens.length) throw new Error(`unexpected '${tokens[pos]}'`);
+  return value;
+}
+
+/** Split at top-level commas. */
+function splitArgs(text) {
+  const out = [];
+  let depth = 0, start = 0;
+  for (let k = 0; k < text.length; k++) {
+    if (text[k] === "(") depth++;
+    else if (text[k] === ")") depth--;
+    else if (text[k] === "," && depth === 0) { out.push(text.slice(start, k)); start = k + 1; }
+  }
+  out.push(text.slice(start));
+  return out.map((s) => s.trim()).filter((s) => s.length);
+}
+
+// -- Requests -------------------------------------------------------------------------------
+
+function selected(group) {
+  return [...document.querySelectorAll(`#chips-${group} input:checked`)].map((i) => i.value);
+}
+
+function nativeGates() {
+  return [...selected("1q"), ...selected("2q")].join(",");
+}
+
+/** Which single-qubit families the selection completes (mirrors the core's bases). */
+function singleQubitBases(set) {
+  const z = set.has("rz") ? "rz" : set.has("p") ? "p" : null;
+  const out = [];
+  if (set.has("u3")) out.push("u3");
+  if (z && set.has("sx")) out.push(set.has("x") ? `${z} + sx + x` : `${z} + sx`);
+  if (z && set.has("rx")) out.push(`${z} + rx`);
+  if (z && set.has("ry")) out.push(`${z} + ry`);
+  if (set.has("rx") && set.has("ry")) out.push("rx + ry");
+  return out;
+}
+
+function updateStatus() {
+  const one = new Set(selected("1q"));
+  const two = selected("2q");
+  const status = document.getElementById("status");
+  const bases = singleQubitBases(one);
+  const messages = [];
+  let warn = false;
+  if (!bases.length) {
+    warn = true;
+    const discrete = ["h", "s", "t"].filter((g) => one.has(g));
+    messages.push(
+      discrete.length
+        ? `${discrete.join(", ")} alone cannot build every rotation exactly (that takes approximate synthesis, which is on the roadmap). Add rz with sx, rx or ry; rx with ry; or u3.`
+        : "These single-qubit gates cannot build every rotation. Add rz (or p) with sx, rx or ry; rx with ry; or u3."
+    );
+  } else {
+    messages.push(`Single-qubit gates are written as ${bases.join(", or ")}.`);
+  }
+  if (!two.length) {
+    warn = true;
+    messages.push("Select a two-qubit gate to decompose two- and three-qubit gates.");
+  }
+  status.textContent = messages.join(" ");
+  status.className = "status" + (warn ? " warn" : "");
+}
+
+function gateRequest(text) {
+  const match = text.trim().match(/^([A-Za-z_][\w]*)\s*(?:\((.*)\))?$/s);
+  if (!match) throw new Error("write a gate name, with its parameters in brackets, like crz(pi/3)");
+  const params = match[2] === undefined ? [] : splitArgs(match[2]).map((arg) => {
+    const z = evaluate(arg);
+    if (Math.abs(z.im) > 1e-12) throw new Error(`the parameter '${arg}' is not real`);
+    return z.re;
+  });
+  return { name: match[1].toLowerCase(), params, request: `gate\n${match[1]}\n${params.join(",")}` };
+}
+
+function parseMatrix(text) {
+  const rows = text.split(/[\n;]/).map((r) => r.trim()).filter((r) => r.length).map(splitArgs);
+  const n = rows.length;
+  if (n !== 2 && n !== 4) throw new Error("write 2 rows (one qubit) or 4 rows (two qubits)");
+  rows.forEach((row, k) => { if (row.length !== n) throw new Error(`row ${k + 1} has ${row.length} entries, not ${n}`); });
+  return rows.map((row) => row.map(evaluate));
+}
+
+/** Columns made orthonormal (Gram–Schmidt), for matrices typed with rounded entries. */
+function orthonormalize(m) {
+  const n = m.length;
+  const cols = [];
+  for (let j = 0; j < n; j++) {
+    let v = m.map((row) => row[j]);
+    for (const c of cols) {
+      const dot = c.reduce((s, x, k) => ops.add(s, ops.mul(C(x.re, -x.im), v[k])), C(0));
+      v = v.map((x, k) => ops.sub(x, ops.mul(dot, c[k])));
+    }
+    const norm = Math.sqrt(v.reduce((s, x) => s + x.re * x.re + x.im * x.im, 0));
+    cols.push(v.map((x) => C(x.re / norm, x.im / norm)));
+  }
+  return m.map((_, i) => cols.map((c) => c[i]));
+}
+
+function unitarityError(m) {
+  let worst = 0;
+  for (let i = 0; i < m.length; i++)
+    for (let j = 0; j < m.length; j++) {
+      const dot = m.reduce((s, row) => ops.add(s, ops.mul(C(row[i].re, -row[i].im), row[j])), C(0));
+      worst = Math.max(worst, Math.hypot(dot.re - (i === j ? 1 : 0), dot.im));
+    }
+  return worst;
+}
+
+function unitaryRequest(text) {
+  let m = parseMatrix(text);
+  let note = "";
+  const off = unitarityError(m);
+  if (off > 1e-9 && off < 1e-2) {
+    const fixed = orthonormalize(m);
+    const change = Math.max(...fixed.flatMap((row, i) => row.map((z, j) => Math.hypot(z.re - m[i][j].re, z.im - m[i][j].im))));
+    m = fixed;
+    note = `The matrix was not quite unitary, so it was made unitary first (largest change ${change.toExponential(1)}).`;
+  }
+  const numbers = m.flatMap((row) => row.flatMap((z) => [z.re, z.im]));
+  return { request: `unitary\n${m.length}\n${numbers.join(",")}`, note };
+}
+
+// -- Output: counts, circuit drawing, OpenQASM ------------------------------------------------
+
+/** An angle as a multiple of π when it is a simple one. */
+function angleText(x, qasm) {
+  const pi = qasm ? "pi" : "π";
+  for (let den = 1; den <= 16; den++) {
+    const num = Math.round((x / Math.PI) * den);
+    if (num !== 0 && Math.abs((num / den) * Math.PI - x) < 1e-9 && gcd(Math.abs(num), den) === 1) {
+      const sign = num < 0 ? "-" : "";
+      const n = Math.abs(num) === 1 ? "" : qasm ? `${Math.abs(num)}*` : `${Math.abs(num)}`;
+      return `${sign}${n}${pi}${den === 1 ? "" : "/" + den}`;
+    }
+  }
+  if (Math.abs(x) < 1e-12) return "0";
+  return qasm ? String(Number(x.toPrecision(15))) : String(Number(x.toPrecision(4)));
+}
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+
+const SVG = "http://www.w3.org/2000/svg";
+function el(name, attrs, text) {
+  const node = document.createElementNS(SVG, name);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function drawCircuit(gates, n) {
+  const ROW = 52, TOP = 26, LEFT = 46, GAP = 12;
+  // Columns: a gate goes after everything on the wires it spans.
+  const free = new Array(n).fill(0);
+  const columns = [];
+  for (const g of gates) {
+    const lo = Math.min(...g.qubits), hi = Math.max(...g.qubits);
+    let col = 0;
+    for (let q = lo; q <= hi; q++) col = Math.max(col, free[q]);
+    for (let q = lo; q <= hi; q++) free[q] = col + 1;
+    (columns[col] ||= []).push(g);
+  }
+  const shown = (name) => name.replace(/^sqrt_/, "√");
+  const label = (g) => [shown(g.name), g.params.map((p) => angleText(p, false)).join(", ")];
+  const widths = columns.map((gs) => Math.max(36, ...gs.map((g) => { const [a, b] = label(g); return Math.max(a.length * 7.5, b.length * 6.2) + 14; })));
+  const width = LEFT + widths.reduce((s, w) => s + w + GAP, 0) + 10;
+  const height = TOP * 2 + (n - 1) * ROW;
+  const svg = el("svg", { width, height, viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": `Circuit with ${gates.length} gates` });
+  const y = (q) => TOP + q * ROW;
+  for (let q = 0; q < n; q++) {
+    svg.append(el("line", { class: "wire", x1: LEFT - 6, x2: width - 4, y1: y(q), y2: y(q) }));
+    svg.append(el("text", { class: "label", x: 4, y: y(q) + 4 }, `q[${q}]`));
+  }
+  let x = LEFT;
+  columns.forEach((gs, c) => {
+    const w = widths[c], cx = x + w / 2;
+    for (const g of gs) {
+      const [name, params] = label(g);
+      const qs = g.qubits;
+      if (qs.length === 2 && (g.name === "cx" || g.name === "cz")) {
+        svg.append(el("line", { class: "link", x1: cx, x2: cx, y1: y(qs[0]), y2: y(qs[1]) }));
+        svg.append(el("circle", { class: "dot", cx, cy: y(qs[0]), r: 4 }));
+        if (g.name === "cz") svg.append(el("circle", { class: "dot", cx, cy: y(qs[1]), r: 4 }));
+        else {
+          svg.append(el("circle", { class: "target", cx, cy: y(qs[1]), r: 10 }));
+          svg.append(el("line", { class: "link", x1: cx - 10, x2: cx + 10, y1: y(qs[1]), y2: y(qs[1]) }));
+          svg.append(el("line", { class: "link", x1: cx, x2: cx, y1: y(qs[1]) - 10, y2: y(qs[1]) + 10 }));
+        }
+        continue;
+      }
+      const top = Math.min(...qs), bottom = Math.max(...qs);
+      const bw = w - 6, bh = (bottom - top) * ROW + 34;
+      svg.append(el("rect", { class: "box", x: cx - bw / 2, y: y(top) - 17, width: bw, height: bh, rx: 4 }));
+      const mid = (y(top) + y(bottom)) / 2;
+      svg.append(el("text", { class: "name", x: cx, y: params ? mid - 1 : mid + 4, "text-anchor": "middle" }, name));
+      if (params) svg.append(el("text", { class: "param", x: cx, y: mid + 11, "text-anchor": "middle" }, params));
+      if (qs.length === 2) {
+        // Mark operand order on two-qubit boxes: the first operand is 0.
+        qs.forEach((q, k) => svg.append(el("text", { class: "param", x: cx - bw / 2 + 4, y: y(q) + 3 }, String(k))));
+      }
+    }
+    x += w + GAP;
+  });
+  return svg;
+}
+
+// Definitions of the natives that stdgates.inc does not have, so the program parses anywhere.
+const DEFINITIONS = {
+  rzz: "gate rzz(t) a, b { cx a, b; rz(t) b; cx a, b; }",
+  rxx: "gate rxx(t) a, b { h a; h b; cx a, b; rz(t) b; cx a, b; h a; h b; }",
+  ryy: "gate ryy(t) a, b { rx(pi/2) a; rx(pi/2) b; cx a, b; rz(t) b; cx a, b; rx(-pi/2) a; rx(-pi/2) b; }",
+  rzx: "gate rzx(t) a, b { h b; cx a, b; rz(t) b; cx a, b; h b; }",
+  ecr: "gate ecr a, b { rzx(pi/4) a, b; x a; rzx(-pi/4) a, b; }",
+  iswap: "gate iswap a, b { s a; s b; h a; cx a, b; cx b, a; h b; }",
+  sqrt_iswap: "gate sqrt_iswap a, b { rxx(-pi/4) a, b; ryy(-pi/4) a, b; }",
+  sqrt_swap: "gate sqrt_swap a, b { rxx(pi/4) a, b; ryy(pi/4) a, b; rzz(pi/4) a, b; }",
+};
+
+function qasmText(gates, n) {
+  const used = new Set(gates.map((g) => g.name));
+  const defs = [];
+  // Definitions come before their users.
+  if (used.has("ecr")) used.add("rzx");
+  if (used.has("sqrt_iswap")) ["rxx", "ryy"].forEach((g) => used.add(g));
+  if (used.has("sqrt_swap")) ["rxx", "ryy", "rzz"].forEach((g) => used.add(g));
+  for (const name of ["rzz", "rxx", "ryy", "rzx", "ecr", "iswap", "sqrt_iswap", "sqrt_swap"])
+    if (used.has(name)) defs.push(DEFINITIONS[name]);
+  const lines = ["OPENQASM 3.0;", 'include "stdgates.inc";', ...defs, `qubit[${n}] q;`];
+  for (const g of gates) {
+    const args = g.params.length ? `(${g.params.map((p) => angleText(p, true)).join(", ")})` : "";
+    lines.push(`${g.name}${args} ${g.qubits.map((q) => `q[${q}]`).join(", ")};`);
+  }
+  return lines.join("\n");
+}
+
+function render(reply, note) {
+  const result = document.getElementById("result");
+  result.replaceChildren();
+  if (!reply.ok) {
+    const p = document.createElement("p");
+    p.className = "error";
+    p.setAttribute("role", "alert");
+    p.textContent = reply.message.charAt(0).toUpperCase() + reply.message.slice(1) + ".";
+    result.append(p);
+    return;
+  }
+  const gates = reply.gates;
+  const twoQubit = gates.filter((g) => g.qubits.length === 2).length;
+  const wrap = document.createElement("div");
+  wrap.style.display = "grid";
+  wrap.style.gap = "1.25rem";
+
+  const summary = document.createElement("div");
+  summary.className = "summary";
+  summary.innerHTML = `<span class="big">${gates.length}<small>${gates.length === 1 ? "gate" : "gates"}</small></span>` +
+    `<span class="big">${twoQubit}<small>two-qubit</small></span>`;
+  const counts = document.createElement("div");
+  counts.className = "counts";
+  const tally = {};
+  for (const g of gates) tally[g.name] = (tally[g.name] || 0) + 1;
+  counts.textContent = Object.entries(tally).map(([k, v]) => `${k} ×${v}`).join("   ") || "nothing: the gate is the identity";
+  summary.append(counts);
+  wrap.append(summary);
+
+  const check = document.createElement("p");
+  const exact = reply.error !== null && reply.error < 1e-8;
+  check.className = "check " + (exact ? "good" : "bad");
+  check.textContent = exact
+    ? `Equal to the input up to a global phase (largest difference ${reply.error === 0 ? "0" : reply.error.toExponential(1)}).`
+    : `Differs from the input by ${reply.error}. Please report this.`;
+  wrap.append(check);
+  if (note) {
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.textContent = note;
+    wrap.append(p);
+  }
+
+  if (gates.length) {
+    const circuit = document.createElement("div");
+    circuit.className = "circuit";
+    circuit.append(drawCircuit(gates, reply.qubits));
+    wrap.append(circuit);
+  }
+
+  const qasm = document.createElement("div");
+  qasm.className = "qasm";
+  const head = document.createElement("div");
+  head.className = "qasm-head";
+  head.innerHTML = '<h2>OpenQASM 3</h2>';
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "copy";
+  copy.textContent = "Copy";
+  const pre = document.createElement("pre");
+  pre.textContent = qasmText(gates, reply.qubits);
+  copy.addEventListener("click", () => {
+    const done = () => { copy.textContent = "Copied"; setTimeout(() => (copy.textContent = "Copy"), 1500); };
+    const select = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+    try { navigator.clipboard.writeText(pre.textContent).then(done, select); } catch { select(); }
+  });
+  head.append(copy);
+  qasm.append(head, pre);
+  wrap.append(qasm);
+  result.append(wrap);
+}
+
+// -- Wiring ------------------------------------------------------------------------------------
+
+let mode = "gate";
+
+let pending = 0;
+
+/** Recompute, dimming the old result first: the numerical search for iSWAP-like gates can take a moment. */
+function update() {
+  if (!core) return;
+  document.getElementById("result").classList.add("busy");
+  cancelAnimationFrame(pending);
+  pending = requestAnimationFrame(() => setTimeout(compute, 0));
+}
+
+function compute() {
+  document.getElementById("result").classList.remove("busy");
+  try {
+    let request, note = "";
+    if (mode === "gate") request = gateRequest(document.getElementById("gate").value).request;
+    else ({ request, note } = unitaryRequest(document.getElementById("unitary").value));
+    render(callCore(`${nativeGates()}\n${request}\n`), note);
+  } catch (error) {
+    render({ ok: false, message: error.message }, "");
+  }
+}
+
+let timer = 0;
+const later = () => { clearTimeout(timer); timer = setTimeout(update, 120); };
+
+function randomUnitary(n) {
+  const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
+  return orthonormalize(Array.from({ length: n }, () => Array.from({ length: n }, () => C(gauss(), gauss()))));
+}
+
+function matrixText(m) {
+  const z = (v) => {
+    const re = Number(v.re.toFixed(5)), im = Number(v.im.toFixed(5));
+    if (im === 0) return String(re);
+    if (re === 0) return `${im}i`;
+    return `${re} ${im < 0 ? "-" : "+"} ${Math.abs(im)}i`;
+  };
+  return m.map((row) => row.map(z).join(", ")).join("\n");
+}
+
+const PRESETS = {
+  random2: () => matrixText(randomUnitary(2)),
+  random4: () => matrixText(randomUnitary(4)),
+  sqrtswap: () => "1, 0, 0, 0\n0, (1+i)/2, (1-i)/2, 0\n0, (1-i)/2, (1+i)/2, 0\n0, 0, 0, 1",
+  hadamard: () => "1/sqrt(2), 1/sqrt(2)\n1/sqrt(2), -1/sqrt(2)",
+};
+
+function selectTab(which) {
+  mode = which;
+  for (const name of ["gate", "unitary"]) {
+    document.getElementById(`tab-${name}`).setAttribute("aria-selected", String(name === which));
+    document.getElementById(`panel-${name}`).hidden = name !== which;
+  }
+  update();
+}
+
+document.querySelectorAll(".chips input").forEach((i) => i.addEventListener("change", () => { updateStatus(); update(); }));
+document.getElementById("gate").addEventListener("input", later);
+document.getElementById("unitary").addEventListener("input", later);
+document.getElementById("tab-gate").addEventListener("click", () => selectTab("gate"));
+document.getElementById("tab-unitary").addEventListener("click", () => selectTab("unitary"));
+document.querySelectorAll("#panel-gate .examples button").forEach((b) =>
+  b.addEventListener("click", () => { document.getElementById("gate").value = b.textContent; update(); }));
+document.querySelectorAll("#panel-unitary .examples button").forEach((b) =>
+  b.addEventListener("click", () => { document.getElementById("unitary").value = PRESETS[b.dataset.matrix](); update(); }));
+
+const NAMES = ["id", "x", "y", "z", "h", "s", "sdg", "t", "tdg", "sx", "sxdg", "rx(θ)", "ry(θ)", "rz(θ)", "p(λ)", "u1(λ)", "u2(φ, λ)", "u3(θ, φ, λ)", "u(θ, φ, λ)",
+  "cx", "cy", "cz", "ch", "csx", "swap", "iswap", "dcx", "ecr", "cp(λ)", "crx(θ)", "cry(θ)", "crz(θ)", "rxx(θ)", "ryy(θ)", "rzz(θ)", "rzx(θ)", "cu3(θ, φ, λ)", "cu(θ, φ, λ, γ)", "sqrt_swap", "sqrt_iswap", "ccx", "cswap"];
+document.getElementById("gate-names").append(...NAMES.map((n) => Object.assign(document.createElement("option"), { value: n.replace(/\(.*\)/, "") , label: n })));
+document.getElementById("unitary").value = PRESETS.sqrtswap();
+
+updateStatus();
+loadCore().then(update, (error) => {
+  render({ ok: false, message: `the compiler could not load (${error.message})` }, "");
+});
+</script>
+</body>
+</html>
