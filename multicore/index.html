@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Multi-Core Mapping Playground</title>
+<meta name="description" content="Map a quantum circuit onto a multi-core (modular) quantum computer with HQA and other mappers, and watch qubits teleport between cores. Runs in your browser.">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;500&family=Fira+Code:wght@400&display=swap">
+<style>
+/* One column: the machine, the circuit, then the result (a table and a step-by-step view). */
+:root {
+  --bg: #fbfbfd;
+  --fg: #15181e;
+  --muted: #5b6270;
+  --line: #e2e5eb;
+  --code: #f0f2f6;
+  --accent: #0b6fd0;
+  --good: #1a7f45;
+  --bad: #b3261e;
+  --sans: "Fira Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Fira Code", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --fg: #e6e9ef; --muted: #98a0ae; --line: #252a33; --code: #181c22;
+    --accent: #5cb2ff; --good: #5fd08a; --bad: #ff8a80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --fg: #e6e9ef; --muted: #98a0ae; --line: #252a33; --code: #181c22;
+  --accent: #5cb2ff; --good: #5fd08a; --bad: #ff8a80;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 300 1rem/1.6 var(--sans); }
+main { max-width: 52rem; margin: 0 auto; padding: 3rem 1.25rem; display: grid; gap: 2.5rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+h1 { margin: 0; font-weight: 500; font-size: 1.75rem; line-height: 1.25; text-wrap: balance; }
+h2 { margin: 0; font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+p { margin: 0; }
+b { font-weight: 500; }
+code, pre, input, textarea { font-family: var(--mono); font-size: 0.875rem; }
+section { display: grid; gap: 1rem; min-width: 0; }
+
+header { display: grid; gap: 1rem; }
+.wordmark { width: 6.5rem; height: auto; display: block; color: var(--fg); }
+.lead { color: var(--muted); max-width: 40rem; }
+
+/* Choice chips: radio buttons styled as a row of toggles. */
+.group { display: grid; gap: 0.5rem; }
+.group > span { font-size: 0.875rem; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chips label { position: relative; }
+.chips input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chips span {
+  display: inline-block; padding: 0.3rem 0.75rem; border: 1px solid var(--line); border-radius: 999px;
+  font-family: var(--mono); font-size: 0.8125rem; cursor: pointer; user-select: none;
+}
+.chips input:checked + span { border-color: var(--accent); color: var(--accent); font-weight: 400; background: var(--code); }
+.chips input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.status { font-size: 0.875rem; }
+#result { transition: opacity 0.15s; }
+#result.busy { opacity: 0.45; }
+@media (prefers-reduced-motion: reduce) { #result { transition: none; } }
+.status.warn { color: var(--bad); }
+
+.hint { font-size: 0.8125rem; color: var(--muted); }
+.error { color: var(--bad); font-size: 0.9375rem; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+input[type="range"] { accent-color: var(--accent); flex: 1; min-width: 8rem; }
+.value { font-family: var(--mono); font-size: 0.875rem; font-variant-numeric: tabular-nums; min-width: 4.5rem; }
+
+#result { display: grid; gap: 1.25rem; transition: opacity 0.15s; }
+#result.busy { opacity: 0.45; }
+@media (prefers-reduced-motion: reduce) { #result { transition: none; } }
+
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 500; font-size: 0.8125rem; color: var(--muted); }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--code); }
+tbody tr[aria-selected="true"] td { background: var(--code); }
+tbody tr[aria-selected="true"] td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+td.best { color: var(--good); font-weight: 500; }
+.table-wrap { overflow-x: auto; }
+
+.view { border: 1px solid var(--line); border-radius: 6px; padding: 0.75rem; display: grid; gap: 0.75rem; }
+.view svg { display: block; width: 100%; height: auto; }
+.view .core { fill: var(--bg); stroke: var(--line); stroke-width: 1.5; }
+.view .link { stroke: var(--muted); stroke-width: 1.5; opacity: 0.5; }
+.view .qubit { fill: var(--line); }
+.view .qubit.busy { fill: var(--accent); }
+.view .qubit.moved { fill: var(--bad); }
+.view .pair { stroke: var(--accent); stroke-width: 1.5; }
+.view .label { fill: var(--muted); font: 400 11px var(--mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.8125rem; color: var(--muted); }
+.legend i { display: inline-block; width: 0.6rem; height: 0.6rem; border-radius: 50%; margin-right: 0.35rem; vertical-align: baseline; }
+button.play {
+  font: 500 0.8125rem var(--sans); color: var(--fg); background: var(--code); border: 1px solid var(--line);
+  border-radius: 4px; padding: 0.3rem 0.75rem; cursor: pointer; min-width: 4.5rem;
+}
+
+footer { border-top: 1px solid var(--line); padding-top: 1.25rem; color: var(--muted); font-size: 0.875rem; display: grid; gap: 0.5rem; }
+@media (max-width: 30rem) {
+  main { padding-top: 2rem; gap: 2rem; }
+  h1 { font-size: 1.4rem; }
+  th, td { padding: 0.45rem 0.35rem; }
+  th:nth-child(4), td:nth-child(4) { display: none; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="/" aria-label="Qevedo home"><svg class="wordmark" viewBox="0 0 252.1 60" role="img" aria-label="Qevedo"><g fill="currentColor" transform="matrix(4.784689009770447,0,0,4.784689009770447,-2.296649545305371,-17.70334884904667)"><path d="M0.48 9.18C0.48 11.98 2.73 14.14 5.66 14.15C6.44 15.47 7.55 16.24 8.78 16.24C9.69 16.24 10.68 15.83 11.44 15.16L10.78 14C10.14 14.50 9.49 14.81 8.97 14.81C8.41 14.81 7.87 14.48 7.34 13.90C9.42 13.26 10.86 11.42 10.86 9.18C10.86 6.38 8.60 4.24 5.67 4.24C2.74 4.24 0.48 6.37 0.48 9.18ZM2.16 9.18C2.16 7.24 3.75 5.73 5.68 5.73C7.60 5.73 9.17 7.24 9.17 9.18C9.17 11.13 7.60 12.67 5.68 12.67C3.77 12.67 2.16 11.13 2.16 9.18ZM12.04 10.37C12.04 12.61 13.55 14.14 15.85 14.14C17.14 14.14 18.20 13.68 18.93 12.88L18.07 11.97C17.53 12.53 16.79 12.84 15.97 12.84C14.80 12.84 13.92 12.12 13.66 10.98L19.29 10.98C19.49 8.29 18.42 6.58 15.81 6.58C13.59 6.59 12.04 8.12 12.04 10.37ZM13.64 9.80C13.82 8.61 14.64 7.87 15.82 7.87C17.04 7.87 17.84 8.60 17.89 9.80ZM19.80 6.64L22.68 14.08L24.35 14.08L27.20 6.64L25.59 6.64L23.55 12.50L21.48 6.64ZM27.62 10.37C27.62 12.61 29.13 14.14 31.43 14.14C32.72 14.14 33.78 13.68 34.51 12.88L33.66 11.97C33.11 12.53 32.37 12.84 31.56 12.84C30.38 12.84 29.50 12.12 29.25 10.98L34.87 10.98C35.07 8.29 34.01 6.58 31.39 6.58C29.18 6.59 27.62 8.12 27.62 10.37ZM29.22 9.80C29.40 8.61 30.23 7.87 31.40 7.87C32.62 7.87 33.42 8.60 33.47 9.80ZM35.85 10.33C35.85 12.60 37.28 14.15 39.42 14.15C40.61 14.15 41.51 13.68 42.04 12.81L42.04 14.08L43.65 14.08L43.65 3.70L42.04 3.70L42.04 7.92C41.50 7.06 40.60 6.57 39.40 6.57C37.30 6.57 35.85 8.09 35.85 10.33ZM37.46 10.39C37.48 8.96 38.42 7.94 39.76 7.94C41.10 7.94 42.04 8.95 42.04 10.39C42.04 11.80 41.10 12.81 39.76 12.81C38.40 12.81 37.48 11.80 37.46 10.39ZM45.40 10.36C45.40 12.60 46.98 14.14 49.29 14.14C51.59 14.14 53.17 12.60 53.17 10.36C53.17 8.11 51.59 6.58 49.29 6.58C46.98 6.58 45.40 8.11 45.40 10.36ZM47.01 10.37C47.01 8.95 47.95 7.97 49.29 7.97C50.62 7.97 51.56 8.95 51.56 10.37C51.56 11.82 50.62 12.80 49.29 12.80C47.95 12.80 47.01 11.82 47.01 10.37Z"></path></g></svg></a>
+    <h1>Multi-core mapping playground</h1>
+    <p class="lead">A modular quantum computer joins small processors, cores, with quantum links; a two-qubit gate needs both qubits in one core, and moving a qubit between cores costs a teleportation. Pick a machine and a circuit, and compare how many teleportations each mapper needs. It runs in your browser: the <a href="https://github.com/qevedo/qcc">QCC</a> core, compiled from Rust to WebAssembly.</p>
+  </header>
+
+  <section aria-labelledby="machine-title">
+    <h2 id="machine-title">Machine</h2>
+    <div class="group">
+      <span id="cores-label">Cores</span>
+      <div class="chips" id="cores" aria-labelledby="cores-label">
+        <label><input type="radio" name="cores" value="2"><span>2</span></label>
+        <label><input type="radio" name="cores" value="4" checked><span>4</span></label>
+        <label><input type="radio" name="cores" value="6"><span>6</span></label>
+        <label><input type="radio" name="cores" value="8"><span>8</span></label>
+        <label><input type="radio" name="cores" value="10"><span>10</span></label>
+      </div>
+    </div>
+    <div class="group">
+      <span id="size-label">Qubits per core</span>
+      <div class="chips" id="size" aria-labelledby="size-label">
+        <label><input type="radio" name="size" value="4"><span>4</span></label>
+        <label><input type="radio" name="size" value="6"><span>6</span></label>
+        <label><input type="radio" name="size" value="8"><span>8</span></label>
+        <label><input type="radio" name="size" value="10" checked><span>10</span></label>
+        <label><input type="radio" name="size" value="16"><span>16</span></label>
+      </div>
+    </div>
+    <div class="group">
+      <span id="links-label">Links between cores</span>
+      <div class="chips" id="links" aria-labelledby="links-label">
+        <label><input type="radio" name="links" value="all-to-all"><span>all to all</span></label>
+        <label><input type="radio" name="links" value="ring"><span>ring</span></label>
+        <label><input type="radio" name="links" value="grid" checked><span>grid</span></label>
+        <label><input type="radio" name="links" value="line"><span>line</span></label>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="circuit-title">
+    <h2 id="circuit-title">Circuit</h2>
+    <div class="group">
+      <span id="kind-label">Benchmark</span>
+      <div class="chips" id="kind" aria-labelledby="kind-label">
+        <label><input type="radio" name="kind" value="qft" checked><span>QFT</span></label>
+        <label><input type="radio" name="kind" value="random"><span>random</span></label>
+        <label><input type="radio" name="kind" value="qv"><span>quantum volume</span></label>
+      </div>
+    </div>
+    <div class="group">
+      <span id="qubits-label">Circuit qubits</span>
+      <div class="row">
+        <input type="range" id="qubits" min="2" max="40" value="40" aria-labelledby="qubits-label">
+        <span class="value" id="qubits-value">40</span>
+      </div>
+    </div>
+    <p class="hint" id="circuit-hint"></p>
+  </section>
+
+  <section aria-labelledby="result-title" aria-live="polite">
+    <h2 id="result-title">Result</h2>
+    <div id="result"><p class="hint">Loading the compiler…</p></div>
+  </section>
+
+  <footer>
+    <p><b>HQA</b> is the Hungarian Qubit Assignment of Escofet, Ovide, Almudéver, Alarcón and Abadal (<a href="https://arxiv.org/abs/2309.12182">arXiv:2309.12182</a>, <a href="https://arxiv.org/abs/2403.17205">ACM TQC 2025</a>): before each step of the circuit, it assigns the gates whose qubits are apart to cores with the Hungarian algorithm, drawn to where the qubits are needed next. <b>HQA-latency</b> also weighs how much each move delays its gate. <b>FGP-rOEE</b> (Baker et al., 2020) repartitions the qubits before every step; the <b>naive</b> mapper moves one qubit of each split gate.</p>
+    <p>Teleportations count one per link crossed. The duration is in two-qubit gate times: gates take 1, each link makes one EPR pair at a time, in 10, and a teleportation takes 5 per link once its pair is ready. Routing inside each core, measured on real circuits, and much more are in <a href="https://github.com/qevedo/qcc/blob/master/docs/MULTICORE.md">the documentation</a>.</p>
+    <p><a href="/">qevedo.com</a> · <a href="/decompose/">Decomposition playground</a> · <a href="https://github.com/qevedo/qcc">Source</a> · <code>pip install qevedo-compiler</code></p>
+  </footer>
+</main>
+<script>
+"use strict";
+
+// -- The compiler: the QCC core as a WebAssembly module ---------------------------------
+
+let core = null;
+
+async function loadCore() {
+  const response = await fetch("qcc.wasm");
+  const { instance } = await WebAssembly.instantiate(await response.arrayBuffer(), {});
+  core = instance.exports;
+}
+
+function callCore(request) {
+  const input = new TextEncoder().encode(request);
+  const ptr = core.alloc(input.length);
+  new Uint8Array(core.memory.buffer, ptr, input.length).set(input);
+  const out = core.map(ptr, input.length);
+  core.dealloc(ptr, input.length);
+  const length = new DataView(core.memory.buffer).getUint32(out, true);
+  const text = new TextDecoder().decode(new Uint8Array(core.memory.buffer, out + 4, length));
+  core.dealloc(out, length + 4);
+  return JSON.parse(text);
+}
+
+// -- Circuits: their two-qubit gates, as in the benchmarks of Escofet et al. --------------
+
+// A small seeded generator, so a circuit is the same every time.
+function generator(seed) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffled(n, random) {
+  const order = [...Array(n).keys()];
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+
+const circuits = {
+  // Every controlled phase is two CX gates.
+  qft: {
+    gates(n) {
+      const out = [];
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) out.push([j, i], [j, i]);
+      return out;
+    },
+    hint: "Every qubit interacts with every other: a controlled phase, two CX gates, per pair.",
+  },
+  // 2n layers, each pairing up all qubits at random.
+  random: {
+    gates(n) {
+      const random = generator(n), out = [];
+      for (let layer = 0; layer < 2 * n; layer++) {
+        const order = shuffled(n, random);
+        for (let k = 0; k + 1 < n; k += 2) out.push([order[k], order[k + 1]]);
+      }
+      return out;
+    },
+    hint: "2n layers, each pairing up all qubits at random, as in the papers' random circuits.",
+  },
+  // n layers of random pairs, three CX gates each (a random SU(4) block).
+  qv: {
+    gates(n) {
+      const random = generator(7 * n + 1), out = [];
+      for (let layer = 0; layer < n; layer++) {
+        const order = shuffled(n, random);
+        for (let k = 0; k + 1 < n; k += 2) {
+          const pair = [order[k], order[k + 1]];
+          out.push(pair, pair, pair);
+        }
+      }
+      return out;
+    },
+    hint: "n layers of random pairs, three CX gates each: Quantum Volume.",
+  },
+};
+
+const METHODS = [
+  ["hqa", "HQA"],
+  ["hqa-latency", "HQA-latency"],
+  ["fgp-roee", "FGP-rOEE"],
+  ["naive", "Naive"],
+];
+
+// -- The machine: where the cores go in the picture ------------------------------------
+
+function gridShape(cores) {
+  let rows = Math.floor(Math.sqrt(cores));
+  while (cores % rows) rows--;
+  return [rows, cores / rows];
+}
+
+function linksName(links, cores) {
+  if (links !== "grid") return links;
+  const [rows, columns] = gridShape(cores);
+  return `grid:${rows}x${columns}`;
+}
+
+// How the cores are drawn: on a circle (rings and all to all, from 3 cores), in a grid,
+// or in a line that snakes back every 5 cores, so neighbours stay side by side.
+function coreRows(links, cores) {
+  if (links === "grid") return gridShape(cores);
+  const perRow = Math.min(cores, 5);
+  return [Math.ceil(cores / perRow), perRow];
+}
+
+// Core centres in a unit box, for a grid or a snaking line.
+function corePlaces(links, cores) {
+  const [rows, columns] = coreRows(links, cores);
+  return [...Array(cores).keys()].map((c) => {
+    const row = Math.floor(c / columns);
+    const column = links === "grid" || row % 2 === 0 ? c % columns : columns - 1 - (c % columns);
+    return [(column + 0.5) / columns, (row + 0.5) / rows];
+  });
+}
+
+// -- State and controls ------------------------------------------------------------------
+
+const $ = (id) => document.getElementById(id);
+const chosen = (name) => document.querySelector(`input[name="${name}"]:checked`).value;
+const state = { results: null, method: "hqa", step: 0, timer: null };
+
+function settings() {
+  const cores = +chosen("cores"), size = +chosen("size");
+  const slider = $("qubits");
+  slider.max = cores * size;
+  if (+slider.value > cores * size || slider.dataset.full === "yes") slider.value = cores * size;
+  $("qubits-value").textContent = `${slider.value} of ${cores * size}`;
+  return { cores, size, links: chosen("links"), kind: chosen("kind"), qubits: +slider.value };
+}
+
+function run() {
+  stop();
+  const s = settings();
+  $("circuit-hint").textContent = circuits[s.kind].hint;
+  if (!core) return;
+  const gates = circuits[s.kind].gates(s.qubits);
+  const head = `${s.qubits} ${s.cores} ${s.size}\n${linksName(s.links, s.cores)}\n`;
+  const body = `1\n${gates.map(([a, b]) => `${a} ${b}`).join(",")}\n`;
+  const results = {};
+  for (const [method] of METHODS) {
+    const start = performance.now();
+    const reply = callCore(head + method + "\n" + body);
+    if (!reply.ok) return showError(reply.message);
+    reply.millis = performance.now() - start;
+    results[method] = reply;
+  }
+  state.results = { ...s, gates: gates.length, methods: results };
+  state.step = Math.min(state.firstStep || 0, results[state.method].slices.length - 1);
+  state.firstStep = 0;
+  writeHash();
+  render();
+}
+
+function showError(message) {
+  $("result").replaceChildren(Object.assign(document.createElement("p"), { className: "error", textContent: message }));
+}
+
+// -- The result: a table, then the selected mapping step by step -------------------------
+
+function render() {
+  const r = state.results;
+  const result = $("result");
+  const values = METHODS.map(([m]) => r.methods[m]);
+  const bestComms = Math.min(...values.map((v) => v.communications));
+  const bestTime = Math.min(...values.map((v) => v.duration));
+  const rows = METHODS.map(([m, name]) => {
+    const v = r.methods[m];
+    return `<tr data-method="${m}" aria-selected="${m === state.method}" tabindex="0">
+      <td>${name}</td>
+      <td class="${v.communications === bestComms ? "best" : ""}">${v.communications}</td>
+      <td class="${v.duration === bestTime ? "best" : ""}">${Math.round(v.duration)}</td>
+      <td>${v.millis < 1 ? "<1" : Math.round(v.millis)} ms</td></tr>`;
+  }).join("");
+  result.innerHTML = `
+    <p class="hint">${r.gates} two-qubit gates on ${r.qubits} qubits, in ${r.methods.hqa.slices.length} timeslices. Select a row to watch its mapping.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Mapper</th><th>Teleportations</th><th>Duration</th><th>Time to map</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div class="view">
+      <div class="row">
+        <button type="button" class="play" id="play">Play</button>
+        <input type="range" id="step" min="0" value="0" aria-label="Timeslice">
+        <span class="value" id="step-value"></span>
+      </div>
+      <svg id="picture" role="img" aria-label="Cores and the qubits in them"></svg>
+      <div class="legend"><span><i style="background:var(--accent)"></i>in a gate now</span><span><i style="background:var(--bad)"></i>just teleported</span><span><i style="background:var(--line)"></i>idle</span></div>
+    </div>`;
+  result.querySelectorAll("tbody tr").forEach((tr) => {
+    const select = () => { state.method = tr.dataset.method; state.step = 0; stop(); writeHash(); render(); };
+    tr.addEventListener("click", select);
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); select(); } });
+  });
+  const mapping = r.methods[state.method];
+  const step = $("step");
+  step.max = mapping.slices.length - 1;
+  step.value = state.step;
+  step.addEventListener("input", () => { stop(); state.step = +step.value; draw(); });
+  $("play").addEventListener("click", () => (state.timer ? stop() : play()));
+  layout(mapping);
+  draw();
+}
+
+// Slots inside each core, kept stable: a qubit keeps its slot while it stays, and an
+// arriving qubit takes the first free one.
+function layout(mapping) {
+  const r = state.results;
+  const slots = [];
+  let slotOf = new Array(r.qubits);
+  const used = [...Array(r.cores)].map(() => new Array(r.size).fill(false));
+  const place = (q, c) => { const s = used[c].indexOf(false); used[c][s] = true; slotOf[q] = s; };
+  mapping.initial.forEach((c, q) => place(q, c));
+  let previous = mapping.initial;
+  for (const assignment of mapping.slices) {
+    slotOf = slotOf.slice();
+    assignment.forEach((c, q) => { if (c !== previous[q]) used[previous[q]][slotOf[q]] = false; });
+    assignment.forEach((c, q) => { if (c !== previous[q]) place(q, c); });
+    slots.push(slotOf);
+    previous = assignment;
+  }
+  state.slots = slots;
+}
+
+function draw() {
+  const r = state.results, mapping = r.methods[state.method];
+  const t = state.step, assignment = mapping.slices[t], slots = state.slots[t];
+  const previous = t === 0 ? mapping.initial : mapping.slices[t - 1];
+  const moved = mapping.slices.slice(0, t + 1).reduce((n, a, i) => {
+    const before = i === 0 ? mapping.initial : mapping.slices[i - 1];
+    return n + a.filter((c, q) => c !== before[q]).length;
+  }, 0);
+  $("step-value").textContent = `${t + 1} / ${mapping.slices.length}`;
+  $("step").value = t;
+
+  const links = r.links;
+  const circle = (links === "ring" || links === "all-to-all") && r.cores >= 3;
+  const places = corePlaces(circle ? "line" : links, r.cores);
+  const [rows, across] = coreRows(links, r.cores);
+  const columns = Math.ceil(Math.sqrt(r.size)), rowsIn = Math.ceil(r.size / columns);
+  const W = 640, R = 200;
+  // Cores on a circle are as large as the gap to their neighbours allows.
+  const box = circle
+    ? Math.min(150, 1.25 * R * Math.sin(Math.PI / r.cores))
+    : Math.min(160, W / across - 24);
+  const cell = box / (columns + 1);
+  const boxHeight = rowsIn * cell + cell * 0.6;
+  const H = circle ? 2 * R + boxHeight + 60 : rows * (boxHeight + 48) + 8;
+  const at = (c) => circle
+    ? [W / 2 + R * Math.cos((2 * Math.PI * c) / r.cores - Math.PI / 2), H / 2 + 8 + R * Math.sin((2 * Math.PI * c) / r.cores - Math.PI / 2)]
+    : [24 + places[c][0] * (W - 48), 30 + places[c][1] * (H - 48)];
+  const dot = (q, c) => {
+    const [x, y] = at(c), s = slots[q];
+    return [x - box / 2 + cell * (1 + (s % columns)), y - (rowsIn * cell) / 2 + cell * (0.5 + Math.floor(s / columns))];
+  };
+  const pairs = mapping.gates[t];
+  const busy = new Set(pairs.flat());
+  let svg = "";
+  for (const [a, b] of mapping.links) {
+    const [x1, y1] = at(a), [x2, y2] = at(b);
+    svg += `<line class="link" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  }
+  for (let c = 0; c < r.cores; c++) {
+    const [x, y] = at(c), h = boxHeight;
+    svg += `<rect class="core" x="${x - box / 2}" y="${y - h / 2}" width="${box}" height="${h}" rx="8"/>`;
+    svg += `<text class="label" x="${x - box / 2 + 4}" y="${y - h / 2 - 5}">core ${c}</text>`;
+  }
+  for (const [a, b] of pairs) {
+    const [x1, y1] = dot(a, assignment[a]), [x2, y2] = dot(b, assignment[b]);
+    svg += `<line class="pair" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  }
+  const radius = Math.max(2.5, Math.min(9, cell * 0.32));
+  assignment.forEach((c, q) => {
+    const [x, y] = dot(q, c);
+    const kind = c !== previous[q] ? "moved" : busy.has(q) ? "busy" : "";
+    svg += `<circle class="qubit ${kind}" cx="${x}" cy="${y}" r="${radius}"><title>q[${q}]</title></circle>`;
+  });
+  const picture = $("picture");
+  picture.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  picture.innerHTML = svg;
+  picture.setAttribute("aria-label", `Timeslice ${t + 1}: ${moved} teleportations so far`);
+}
+
+function play() {
+  const mapping = state.results.methods[state.method];
+  if (state.step >= mapping.slices.length - 1) state.step = 0;
+  $("play").textContent = "Pause";
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  state.timer = setInterval(() => {
+    if (state.step >= mapping.slices.length - 1) return stop();
+    state.step++;
+    draw();
+  }, reduce ? 600 : 250);
+}
+
+function stop() {
+  clearInterval(state.timer);
+  state.timer = null;
+  const button = $("play");
+  if (button) button.textContent = "Play";
+}
+
+// -- The settings in the address, so a configuration can be shared ----------------------
+
+function readHash() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  for (const name of ["cores", "size", "links", "kind"]) {
+    const input = document.querySelector(`input[name="${name}"][value="${params.get(name)}"]`);
+    if (input) input.checked = true;
+  }
+  const s = settings();
+  if (params.has("qubits")) {
+    $("qubits").value = Math.min(+params.get("qubits"), s.cores * s.size);
+    $("qubits").dataset.full = +$("qubits").value === +$("qubits").max ? "yes" : "no";
+  }
+  if (METHODS.some(([m]) => m === params.get("method"))) state.method = params.get("method");
+  state.firstStep = +params.get("step") || 0;
+}
+
+function writeHash() {
+  const s = settings();
+  const params = new URLSearchParams({ cores: s.cores, size: s.size, links: s.links, kind: s.kind, qubits: s.qubits, method: state.method });
+  history.replaceState(null, "", "#" + params);
+}
+
+// -- Wiring -------------------------------------------------------------------------------
+
+for (const name of ["cores", "size", "links", "kind"]) {
+  document.querySelectorAll(`input[name="${name}"]`).forEach((input) => input.addEventListener("change", run));
+}
+$("qubits").dataset.full = "yes";
+$("qubits").addEventListener("input", () => {
+  $("qubits").dataset.full = +$("qubits").value === +$("qubits").max ? "yes" : "no";
+  run();
+});
+
+readHash();
+loadCore().then(run).catch((e) => showError(`The compiler did not load: ${e.message}`));
+</script>
+</body>
+</html>
