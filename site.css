@@ -1,0 +1,17 @@
+/* The bar at the top of every page: the wordmark (home), then the tools.
+   Pages define the colour and font tokens (--fg, --muted, --line, --sans),
+   and --page-width, their column's width, to align the bar with it. */
+.site { border-bottom: 1px solid var(--line); }
+.site-inner {
+  max-width: var(--page-width, 52rem); margin: 0 auto; padding: 0.875rem 1.25rem;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.5rem;
+}
+.site-home { display: block; color: var(--fg); }
+.site-home svg { width: 5.75rem; height: auto; display: block; }
+.site-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; font: 300 0.9375rem/1.6 var(--sans); }
+.site-links a { color: var(--muted); text-decoration: none; }
+.site-links a:hover { color: var(--fg); }
+.site-links a[aria-current="page"] { color: var(--fg); font-weight: 500; }
+@media (max-width: 30rem) {
+  .site-links { gap: 0.25rem 1rem; }
+}
