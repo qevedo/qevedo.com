@@ -112,6 +112,12 @@ figure img {
   background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem;
 }
 .note { color: var(--muted); font-size: 0.9375rem; }
+.table-wrap { overflow-x: auto; }
+.results { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.results th, .results td { text-align: right; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.results th:first-child, .results td:first-child { text-align: left; }
+.results th { font-weight: 500; font-size: 0.875rem; color: var(--muted); }
+.results .ours td { font-weight: 500; }
 
 footer {
   border-top: 1px solid var(--line); padding-top: 1.5rem;
@@ -120,6 +126,7 @@ footer {
 }
 @media (max-width: 30rem) {
   main { padding-top: 3rem; gap: 3rem; }
+  .results th, .results td { padding: 0.5rem 0.4rem; }
   .pitch { font-size: 1.3125rem; }
 }
 </style>
@@ -194,6 +201,22 @@ print(result.counts, result.backend)</code></pre>
       </figure>
     </div>
     <p class="note">Method, raw data and scripts to reproduce every number: <a href="https://github.com/qevedo/qevedo-simulator/tree/master/benchmarks">qevedo-simulator/benchmarks</a>.</p>
+
+    <h3>qevedo-compiler</h3>
+    <p class="note">21 circuits (QFT, QAOA, Quantum Volume, GHZ, Heisenberg, adders, Clifford+T) of 8 to 32 qubits, compiled for rz, sx, x and cx. Gates relative to Qiskit at optimization level 3 (geometric means) and median time; lower is better.</p>
+    <div class="table-wrap">
+      <table class="results">
+        <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
+        <tbody>
+          <tr class="ours"><td>QCC</td><td>1.017×</td><td>1.003×</td><td>3 ms</td></tr>
+          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>5 ms</td></tr>
+          <tr><td>pytket</td><td>1.002×</td><td>1.123×</td><td>632 ms</td></tr>
+          <tr><td>UCC</td><td>1.017×</td><td>2.210×</td><td>13 ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><b>Inside Qiskit.</b> As Qiskit's optimization stage (from version 0.2.1), <code>transpile(circuit, backend, optimization_method="qcc")</code>, on a heavy-hex chip: the same two-qubit gates and 7% fewer gates in all, up to 46% on a QFT.</p>
+    <p class="note">Scripts and results: <a href="https://github.com/qevedo/qcc/tree/master/benchmarks/compilation">qcc/benchmarks/compilation</a>.</p>
   </section>
 
   <footer>
