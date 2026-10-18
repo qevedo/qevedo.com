@@ -26,7 +26,6 @@
   --python: #3572a5;
   --sans: "Fira Sans", "Helvetica Neue", Arial, sans-serif;
   --mono: "Fira Code", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --page-width: 42rem;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -48,7 +47,7 @@ body {
   font: 300 1.0625rem/1.65 var(--sans);
 }
 main {
-  max-width: 42rem;
+  max-width: 52rem;
   margin: 0 auto;
   padding: 3rem 1.25rem 3rem;
   display: grid;
@@ -71,7 +70,9 @@ section { display: grid; gap: 1.25rem; min-width: 0; }
 section > h3 { margin: 0 0 -0.75rem; font-size: 1.25rem; }
 
 header { display: grid; gap: 1.5rem; }
-.pitch { font-size: 1.5rem; line-height: 1.4; text-wrap: balance; }
+.pitch { font-size: 1.5rem; line-height: 1.4; text-wrap: balance; max-width: 40rem; }
+.highlights { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.5rem; }
+.highlights b { font-weight: 500; }
 .install { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; }
 .cmd {
   display: inline-flex; align-items: center; gap: 0.75rem;
@@ -139,7 +140,7 @@ footer {
     <div class="site-links">
       <a href="/decompose/">Decompose</a>
       <a href="/multicore/">Multi-core</a>
-      <a href="/#benchmarks">Benchmarks</a>
+      <a href="/benchmarks/">Benchmarks</a>
       <a href="https://github.com/qevedo">GitHub</a>
     </div>
   </div>
@@ -207,43 +208,12 @@ print(result.counts, result.backend)</code></pre>
 
   <section id="benchmarks">
     <h2>Benchmarks</h2>
-    <h3>qevedo-simulator</h3>
-    <p class="note">Same circuits, same machine: an Intel i9-14900K with 24 cores and 62&nbsp;GB of RAM. Lower is better.</p>
-    <div class="bench">
-      <figure>
-        <figcaption><b>State vector.</b> 3–4× faster than qsim and 7–12× faster than Qiskit Aer at 26–30 qubits.</figcaption>
-        <a href="/images/benchmarks/statevector.svg"><img src="/images/benchmarks/statevector.svg" alt="Bar chart: seconds per circuit for qvd, qsim and Qiskit Aer on random, QFT and GHZ circuits of 26 to 30 qubits" width="667" height="313" loading="lazy"></a>
-      </figure>
-      <figure>
-        <figcaption><b>Clifford circuits.</b> A distance-101 surface code, 20,401 qubits, samples 10,000 shots in 1.5&nbsp;s, 8× faster than Stim.</figcaption>
-        <a href="/images/benchmarks/stabilizer.svg"><img src="/images/benchmarks/stabilizer.svg" alt="Bar chart: seconds for 10,000 shots of rotated surface codes for qvd, Stim and Qiskit Aer" width="692" height="330" loading="lazy"></a>
-      </figure>
-      <figure>
-        <figcaption><b>Matrix product states.</b> 1.6–14× faster than the faster of Qiskit Aer and quimb, with the same truncation.</figcaption>
-        <a href="/images/benchmarks/mps.svg"><img src="/images/benchmarks/mps.svg" alt="Bar chart: seconds for gates and 1000 shots on MPS circuits for qvd, Qiskit Aer and quimb" width="701" height="324" loading="lazy"></a>
-      </figure>
-      <figure>
-        <figcaption><b>Clifford+T.</b> 200 qubits with 20 T gates sample 1000 shots in 0.11&nbsp;s. Every Qiskit Aer method takes over 10 minutes or does not support the circuit.</figcaption>
-        <a href="/images/benchmarks/nearclifford.svg"><img src="/images/benchmarks/nearclifford.svg" alt="Bar chart: seconds for 1000 shots of random Clifford+T circuits for qvd and Qiskit Aer's methods" width="673" height="316" loading="lazy"></a>
-      </figure>
-    </div>
-    <p class="note">Method, raw data and scripts to reproduce every number: <a href="https://github.com/qevedo/qevedo-simulator/tree/master/benchmarks">qevedo-simulator/benchmarks</a>.</p>
-
-    <h3>qevedo-compiler</h3>
-    <p class="note">21 circuits (QFT, QAOA, Quantum Volume, GHZ, Heisenberg, adders, Clifford+T) of 8 to 32 qubits, compiled for rz, sx, x and cx. Gates relative to Qiskit at optimization level 3 (geometric means) and median time; lower is better.</p>
-    <div class="table-wrap">
-      <table class="results">
-        <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
-        <tbody>
-          <tr class="ours"><td>QCC</td><td>1.017×</td><td>1.003×</td><td>3 ms</td></tr>
-          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>5 ms</td></tr>
-          <tr><td>pytket</td><td>1.002×</td><td>1.123×</td><td>632 ms</td></tr>
-          <tr><td>UCC</td><td>1.017×</td><td>2.210×</td><td>13 ms</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p><b>Inside Qiskit.</b> As Qiskit's optimization stage (from version 0.2.1), <code>transpile(circuit, backend, optimization_method="qcc")</code>, on a heavy-hex chip: the same two-qubit gates and 7% fewer gates in all, up to 46% on a QFT.</p>
-    <p class="note">Scripts and results: <a href="https://github.com/qevedo/qcc/tree/master/benchmarks/compilation">qcc/benchmarks/compilation</a>.</p>
+    <ul class="highlights">
+      <li><b>Simulator.</b> State vectors 3–4× faster than qsim and 7–12× faster than Qiskit Aer; a distance-101 surface code sampled 8× faster than Stim.</li>
+      <li><b>Compiler.</b> As few two-qubit gates as Qiskit at level 3 (but for its relabelled SWAPs), usually in less time; as Qiskit's optimization stage, 7% fewer gates.</li>
+      <li><b>Multi-core.</b> HQA reproduced, 1.24× fewer teleportations than FGP-rOEE; on TeleSABRE's own device, 0.26× its EPR pairs.</li>
+    </ul>
+    <p><a href="/benchmarks/">All benchmarks, with charts and the scripts to reproduce them →</a></p>
   </section>
 
   <footer>

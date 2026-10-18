@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Benchmarks — Qevedo</title>
+<meta name="description" content="Benchmarks of the Qevedo simulator and compiler against Qiskit, qsim, Stim, pytket, UCC and others, with the scripts to reproduce every number.">
+<meta property="og:title" content="Benchmarks — Qevedo">
+<meta property="og:description" content="Benchmarks of the Qevedo simulator and compiler, with the scripts to reproduce every number.">
+<meta property="og:url" content="https://qevedo.com/benchmarks/">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;500&family=Fira+Code:wght@400&display=swap">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* One column: the simulator's, the compiler's and the multi-core benchmarks. */
+:root {
+  --bg: #fbfbfd;
+  --fg: #15181e;
+  --muted: #5b6270;
+  --line: #e2e5eb;
+  --code: #f0f2f6;
+  --accent: #0b6fd0;
+  --rust: #dea584;
+  --python: #3572a5;
+  --sans: "Fira Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Fira Code", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --fg: #e6e9ef; --muted: #98a0ae; --line: #252a33; --code: #181c22; --accent: #5cb2ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --fg: #e6e9ef; --muted: #98a0ae; --line: #252a33; --code: #181c22; --accent: #5cb2ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 300 1.0625rem/1.65 var(--sans);
+}
+main {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 3rem;
+  display: grid;
+  gap: 3.5rem;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+b, h2, h3 { font-weight: 500; }
+h2 {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+p { margin: 0; }
+code, pre { font-family: var(--mono); font-size: 0.875rem; }
+section { display: grid; gap: 1.25rem; min-width: 0; }
+section > h3 { margin: 0 0 -0.75rem; font-size: 1.25rem; }
+
+header { display: grid; gap: 1.5rem; }
+.pitch { font-size: 1.5rem; line-height: 1.4; text-wrap: balance; }
+h1 { margin: 0; font-weight: 500; font-size: 1.75rem; line-height: 1.25; }
+.lead { color: var(--muted); max-width: 40rem; }
+.install { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; }
+.cmd {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  background: var(--code); border-radius: 6px; padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+}
+.cmd button {
+  font: 500 0.75rem var(--sans); color: var(--muted); background: none;
+  border: 1px solid var(--line); border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer;
+}
+.cmd button:hover { color: var(--fg); }
+.links { display: flex; gap: 1.25rem; font-weight: 500; }
+
+.repos { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+.repo {
+  border: 1px solid var(--line); border-radius: 6px; padding: 1rem;
+  display: flex; flex-direction: column; gap: 0.5rem; min-width: 0;
+}
+.repo h3 { margin: 0; font-size: 0.9375rem; display: flex; align-items: center; gap: 0.5rem; }
+.repo h3 svg { width: 1rem; height: 1rem; flex: none; fill: var(--muted); }
+.repo p { flex: 1; color: var(--muted); font-size: 0.875rem; line-height: 1.5; }
+.meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem; font-size: 0.8125rem; color: var(--muted); }
+.meta span { display: inline-flex; align-items: center; gap: 0.375rem; }
+.meta a { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.meta a:hover { color: var(--accent); }
+.lang { width: 0.75rem; height: 0.75rem; border-radius: 50%; display: inline-block; }
+.lang.rust { background: var(--rust); }
+.lang.python { background: var(--python); }
+
+pre {
+  margin: 0; background: var(--code); border-radius: 6px;
+  padding: 1rem 1.125rem; overflow-x: auto; line-height: 1.6;
+}
+
+.bench { display: grid; gap: 2.5rem; }
+figure { margin: 0; display: grid; gap: 0.875rem; min-width: 0; }
+figcaption b { font-weight: 500; }
+figure img {
+  width: 100%; height: auto; display: block;
+  background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem;
+}
+.note { color: var(--muted); font-size: 0.9375rem; }
+.table-wrap { overflow-x: auto; }
+.results { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.results th, .results td { text-align: right; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.results th:first-child, .results td:first-child { text-align: left; }
+.results th { font-weight: 500; font-size: 0.875rem; color: var(--muted); }
+.results .ours td { font-weight: 500; }
+/* A table of sentences: they wrap, and read from the left. */
+.results.text th, .results.text td { white-space: normal; text-align: left; vertical-align: top; }
+.results.text td:first-child { width: 55%; }
+
+footer {
+  border-top: 1px solid var(--line); padding-top: 1.5rem;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem;
+  color: var(--muted); font-size: 0.9375rem;
+}
+@media (max-width: 30rem) {
+  main { padding-top: 3rem; gap: 3rem; }
+  .results th, .results td { padding: 0.5rem 0.4rem; }
+  .pitch { font-size: 1.3125rem; }
+}
+</style>
+</head>
+<body>
+<nav class="site" aria-label="Qevedo">
+  <div class="site-inner">
+    <a class="site-home" href="/" aria-label="Qevedo home"><svg viewBox="0 0 252.1 60" aria-hidden="true"><g fill="currentColor" transform="matrix(4.784689009770447,0,0,4.784689009770447,-2.296649545305371,-17.70334884904667)"><path d="M0.48 9.18C0.48 11.98 2.73 14.14 5.66 14.15C6.44 15.47 7.55 16.24 8.78 16.24C9.69 16.24 10.68 15.83 11.44 15.16L10.78 14C10.14 14.50 9.49 14.81 8.97 14.81C8.41 14.81 7.87 14.48 7.34 13.90C9.42 13.26 10.86 11.42 10.86 9.18C10.86 6.38 8.60 4.24 5.67 4.24C2.74 4.24 0.48 6.37 0.48 9.18ZM2.16 9.18C2.16 7.24 3.75 5.73 5.68 5.73C7.60 5.73 9.17 7.24 9.17 9.18C9.17 11.13 7.60 12.67 5.68 12.67C3.77 12.67 2.16 11.13 2.16 9.18ZM12.04 10.37C12.04 12.61 13.55 14.14 15.85 14.14C17.14 14.14 18.20 13.68 18.93 12.88L18.07 11.97C17.53 12.53 16.79 12.84 15.97 12.84C14.80 12.84 13.92 12.12 13.66 10.98L19.29 10.98C19.49 8.29 18.42 6.58 15.81 6.58C13.59 6.59 12.04 8.12 12.04 10.37ZM13.64 9.80C13.82 8.61 14.64 7.87 15.82 7.87C17.04 7.87 17.84 8.60 17.89 9.80ZM19.80 6.64L22.68 14.08L24.35 14.08L27.20 6.64L25.59 6.64L23.55 12.50L21.48 6.64ZM27.62 10.37C27.62 12.61 29.13 14.14 31.43 14.14C32.72 14.14 33.78 13.68 34.51 12.88L33.66 11.97C33.11 12.53 32.37 12.84 31.56 12.84C30.38 12.84 29.50 12.12 29.25 10.98L34.87 10.98C35.07 8.29 34.01 6.58 31.39 6.58C29.18 6.59 27.62 8.12 27.62 10.37ZM29.22 9.80C29.40 8.61 30.23 7.87 31.40 7.87C32.62 7.87 33.42 8.60 33.47 9.80ZM35.85 10.33C35.85 12.60 37.28 14.15 39.42 14.15C40.61 14.15 41.51 13.68 42.04 12.81L42.04 14.08L43.65 14.08L43.65 3.70L42.04 3.70L42.04 7.92C41.50 7.06 40.60 6.57 39.40 6.57C37.30 6.57 35.85 8.09 35.85 10.33ZM37.46 10.39C37.48 8.96 38.42 7.94 39.76 7.94C41.10 7.94 42.04 8.95 42.04 10.39C42.04 11.80 41.10 12.81 39.76 12.81C38.40 12.81 37.48 11.80 37.46 10.39ZM45.40 10.36C45.40 12.60 46.98 14.14 49.29 14.14C51.59 14.14 53.17 12.60 53.17 10.36C53.17 8.11 51.59 6.58 49.29 6.58C46.98 6.58 45.40 8.11 45.40 10.36ZM47.01 10.37C47.01 8.95 47.95 7.97 49.29 7.97C50.62 7.97 51.56 8.95 51.56 10.37C51.56 11.82 50.62 12.80 49.29 12.80C47.95 12.80 47.01 11.82 47.01 10.37Z"></path></g></svg></a>
+    <div class="site-links">
+      <a href="/decompose/">Decompose</a>
+      <a href="/multicore/">Multi-core</a>
+      <a href="/benchmarks/" aria-current="page">Benchmarks</a>
+      <a href="https://github.com/qevedo">GitHub</a>
+    </div>
+  </div>
+</nav>
+<main>
+  <header>
+    <h1>Benchmarks</h1>
+    <p class="lead">Every number on this page comes from a script in the repositories, with its raw results, on an Intel i9-14900K with 24 cores and 62&nbsp;GB of RAM.</p>
+  </header>
+
+  <section id="simulator">
+    <h2>qevedo-simulator</h2>
+    <p class="note">Same circuits, same machine: an Intel i9-14900K with 24 cores and 62&nbsp;GB of RAM. Lower is better.</p>
+    <div class="bench">
+      <figure>
+        <figcaption><b>State vector.</b> 3–4× faster than qsim and 7–12× faster than Qiskit Aer at 26–30 qubits.</figcaption>
+        <a href="/images/benchmarks/statevector.svg"><img src="/images/benchmarks/statevector.svg" alt="Bar chart: seconds per circuit for qvd, qsim and Qiskit Aer on random, QFT and GHZ circuits of 26 to 30 qubits" width="667" height="313" loading="lazy"></a>
+      </figure>
+      <figure>
+        <figcaption><b>Clifford circuits.</b> A distance-101 surface code, 20,401 qubits, samples 10,000 shots in 1.5&nbsp;s, 8× faster than Stim.</figcaption>
+        <a href="/images/benchmarks/stabilizer.svg"><img src="/images/benchmarks/stabilizer.svg" alt="Bar chart: seconds for 10,000 shots of rotated surface codes for qvd, Stim and Qiskit Aer" width="692" height="330" loading="lazy"></a>
+      </figure>
+      <figure>
+        <figcaption><b>Matrix product states.</b> 1.6–14× faster than the faster of Qiskit Aer and quimb, with the same truncation.</figcaption>
+        <a href="/images/benchmarks/mps.svg"><img src="/images/benchmarks/mps.svg" alt="Bar chart: seconds for gates and 1000 shots on MPS circuits for qvd, Qiskit Aer and quimb" width="701" height="324" loading="lazy"></a>
+      </figure>
+      <figure>
+        <figcaption><b>Clifford+T.</b> 200 qubits with 20 T gates sample 1000 shots in 0.11&nbsp;s. Every Qiskit Aer method takes over 10 minutes or does not support the circuit.</figcaption>
+        <a href="/images/benchmarks/nearclifford.svg"><img src="/images/benchmarks/nearclifford.svg" alt="Bar chart: seconds for 1000 shots of random Clifford+T circuits for qvd and Qiskit Aer's methods" width="673" height="316" loading="lazy"></a>
+      </figure>
+    </div>
+    <p class="note">Method, raw data and scripts to reproduce every number: <a href="https://github.com/qevedo/qevedo-simulator/tree/master/benchmarks">qevedo-simulator/benchmarks</a>.</p>
+
+  </section>
+
+  <section id="compiler">
+    <h2>qevedo-compiler</h2>
+    <p class="note">21 circuits (QFT, QAOA, Quantum Volume, GHZ, Heisenberg, adders, Clifford+T) of 8 to 32 qubits, compiled for rz, sx, x and cx. Gates relative to Qiskit at optimization level 3 (geometric means) and median time; lower is better.</p>
+    <div class="table-wrap">
+      <table class="results">
+        <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
+        <tbody>
+          <tr class="ours"><td>QCC</td><td>1.017×</td><td>1.003×</td><td>3 ms</td></tr>
+          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>5 ms</td></tr>
+          <tr><td>pytket</td><td>1.002×</td><td>1.123×</td><td>632 ms</td></tr>
+          <tr><td>UCC</td><td>1.017×</td><td>2.210×</td><td>13 ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><b>Inside Qiskit.</b> As Qiskit's optimization stage (from version 0.2.1), <code>transpile(circuit, backend, optimization_method="qcc")</code>, on a heavy-hex chip: the same two-qubit gates and 7% fewer gates in all, up to 46% on a QFT.</p>
+    <p class="note">Scripts and results: <a href="https://github.com/qevedo/qcc/tree/master/benchmarks/compilation">qcc/benchmarks/compilation</a>.</p>
+  </section>
+
+  <section id="multicore">
+    <h2>Multi-core mapping</h2>
+    <p class="note">Mapping circuits onto modular quantum computers, cores joined by quantum links, in qevedo-compiler. Benchmarks of Escofet et al. (QFT, adders, random circuits, Quantum Volume, built with Qiskit); fewer teleportations is better.</p>
+    <div class="table-wrap">
+      <table class="results text">
+        <thead><tr><th>Comparison</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>HQA against FGP-rOEE, 105 configurations</td><td>1.24× fewer teleportations (mean), 7.8× faster (median)</td></tr>
+          <tr><td>HQA counting link hops, cores in a ring, grid or line</td><td>1.6–1.9× fewer than FGP-rOEE</td></tr>
+          <tr><td>HQA with ports against TeleSABRE, its own device and circuits</td><td>0.26× the EPR pairs, 0.51× the SWAPs (geometric means)</td></tr>
+          <tr><td>HQA-latency against HQA, 1 to unlimited EPR pairs per link</td><td>6–12% shorter circuits on average, never longer</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>HQA is the Hungarian Qubit Assignment of Escofet et al.; HQA-latency and the routing inside cores are ours. TeleSABRE deadlocks on random circuits and Quantum Volume in all 100 of its attempts; on the 8 circuits it completes, HQA with ports uses fewer EPR pairs and fewer SWAPs on every one. Try the mappers in the <a href="/multicore/">multi-core playground</a>.</p>
+    <p class="note">Method, results and caveats: <a href="https://github.com/qevedo/qcc/blob/master/docs/MULTICORE.md">qcc/docs/MULTICORE.md</a>.</p>
+  </section>
+
+  <footer>
+    <span>Qevedo · open source under the MIT license</span>
+    <a href="https://github.com/qevedo">github.com/qevedo</a>
+  </footer>
+</main>
+</body>
+</html>

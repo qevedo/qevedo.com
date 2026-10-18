@@ -1,6 +1,7 @@
 /* The bar at the top of every page: the wordmark (home), then the tools.
-   Pages define the colour and font tokens (--fg, --muted, --line, --sans),
-   and --page-width, their column's width, to align the bar with it. */
+   Pages define the colour and font tokens (--fg, --muted, --line, --sans).
+   Every page's column is 52rem wide; a page may set --page-width to line
+   the bar up with a column of another width. */
 .site { border-bottom: 1px solid var(--line); }
 .site-inner {
   max-width: var(--page-width, 52rem); margin: 0 auto; padding: 0.875rem 1.25rem;
