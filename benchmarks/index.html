@@ -182,15 +182,15 @@ footer {
 
   <section id="compiler">
     <h2>qevedo-compiler</h2>
-    <p class="note">21 circuits (QFT, QAOA, Quantum Volume, GHZ, Heisenberg, adders, Clifford+T) of 8 to 32 qubits, compiled for rz, sx, x and cx; QCC uses no more gates than Qiskit on any of them. Gates relative to Qiskit at optimization level 3 (geometric means) and median time; lower is better.</p>
+    <p class="note">24 circuits (QFT, QAOA, Quantum Volume, GHZ, Heisenberg, adders, Clifford+T, random Hamiltonians) of 8 to 32 qubits, compiled for rz, sx, x and cx; QCC uses no more two-qubit gates than Qiskit on any of them. Gates relative to Qiskit at optimization level 3 (geometric means) and median time; lower is better.</p>
     <div class="table-wrap">
       <table class="results">
         <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC</td><td>0.968×</td><td>0.901×</td><td>3 ms</td></tr>
+          <tr class="ours"><td>QCC</td><td>0.942×</td><td>0.916×</td><td>4 ms</td></tr>
           <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>6 ms</td></tr>
-          <tr><td>pytket</td><td>1.002×</td><td>1.123×</td><td>626 ms</td></tr>
-          <tr><td>UCC</td><td>1.017×</td><td>2.210×</td><td>15 ms</td></tr>
+          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>978 ms</td></tr>
+          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>14 ms</td></tr>
         </tbody>
       </table>
     </div>
@@ -199,14 +199,14 @@ footer {
       <table class="results">
         <thead><tr><th>Heavy-hex, 8–16 qubits</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC, CX</td><td>0.951×</td><td>0.828×</td><td>43 ms</td></tr>
-          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>65 ms</td></tr>
-          <tr class="ours"><td>QCC, CZ</td><td>0.943×</td><td>0.884×</td><td>64 ms</td></tr>
-          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>63 ms</td></tr>
+          <tr class="ours"><td>QCC, CX</td><td>0.943×</td><td>0.835×</td><td>50 ms</td></tr>
+          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>57 ms</td></tr>
+          <tr class="ours"><td>QCC, CZ</td><td>0.937×</td><td>0.881×</td><td>69 ms</td></tr>
+          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>42 ms</td></tr>
         </tbody>
       </table>
     </div>
-    <p><b>Inside Qiskit.</b> As Qiskit's optimization stage, <code>transpile(circuit, backend, optimization_method="qcc")</code>, on a heavy-hex chip: with CX, 3% fewer two-qubit gates and 14% fewer gates in all, up to 61% on a QFT; with CZ, 9% fewer gates in all.</p>
+    <p><b>Inside Qiskit.</b> As Qiskit's optimization stage, <code>transpile(circuit, backend, optimization_method="qcc")</code>, on a heavy-hex chip: with CX, 2% fewer two-qubit gates and 15% fewer gates in all, up to 61% on a QFT; with CZ, 10% fewer gates in all.</p>
     <p class="note">Scripts and results: <a href="https://github.com/qevedo/qcc/tree/master/benchmarks/compilation">qcc/benchmarks/compilation</a>.</p>
   </section>
 

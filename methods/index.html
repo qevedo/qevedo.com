@@ -175,6 +175,17 @@ footer {
         <p class="src">Amy, Maslov and Mosca, <a href="https://arxiv.org/abs/1303.2042">IEEE TCAD 2014</a>; Nam, Ross, Su, Childs and Maslov, <a href="https://arxiv.org/abs/1710.07345">npj QI 2018</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/phase_folding.rs">phase_folding.rs</a></p>
       </article>
       <article class="method">
+        <h3>Rotation merging through Cliffords <span class="tag">published</span></h3>
+        <p>Phase folding stops at Hadamards. Moved through every Clifford gate before it with a stabilizer tableau, each Z rotation is a rotation about a Pauli string, and rotations about the same string merge whenever everything between them commutes with it.</p>
+        <p class="src">Zhang and Chen, <a href="https://arxiv.org/abs/1903.12456">arXiv:1903.12456</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>Pauli networks <span class="tag">extended</span></h3>
+        <p>A Hamiltonian simulation step is a list of Pauli rotations, each conventionally written with its own CNOT ladders. QCC reads the circuit back as rotations and one Clifford, and builds it again greedily: each controlled-Pauli gate is the one that most lowers the weights of the rotations coming next, so commuting rotations share their CNOTs. It is kept only when it is cheaper.</p>
+        <p class="effect">One Trotter step of random Hamiltonians: 43% fewer CNOTs than Qiskit at 8 qubits (108 against 191) and 17% at 16.</p>
+        <p class="src">After Rustiq: Goubault de Brugière and Martiel, <a href="https://arxiv.org/abs/2404.03280">arXiv:2404.03280</a>, and pytket's GreedyPauliSimp; Clifford synthesis after Bravyi et al., <a href="https://arxiv.org/abs/2105.02291">arXiv:2105.02291</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
+      </article>
+      <article class="method">
         <h3>Two-qubit synthesis in context <span class="tag">ours</span></h3>
         <p>Runs of gates on one pair of qubits are resynthesized from their 4×4 unitary with the fewest two-qubit gates (KAK). Many syntheses use that many; they differ in their single-qubit gates. A block's outer gates merge with its neighbours' afterwards, so QCC picks the one with the fewest gates between its first and last two-qubit gate, not the fewest in isolation.</p>
         <p class="effect">Quantum Volume: 1% fewer gates than synthesizing each block alone, which brings QCC level with Qiskit there.</p>
