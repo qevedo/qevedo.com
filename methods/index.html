@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Methods — Qevedo</title>
+<meta name="description" content="The techniques behind the Qevedo compiler, multi-core mapper and simulator: phase folding, two-qubit synthesis in context, latency-aware mapping, cache-blocked state vectors and more, with sources and measured effects.">
+<meta property="og:title" content="Methods — Qevedo">
+<meta property="og:description" content="The techniques behind the Qevedo compiler, multi-core mapper and simulator, with sources and measured effects.">
+<meta property="og:url" content="https://qevedo.com/methods/">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;500&family=Fira+Code:wght@400&display=swap">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* One column of methods, grouped by tool. */
+:root {
+  --bg: #fbfbfd;
+  --fg: #15181e;
+  --muted: #5b6270;
+  --line: #e2e5eb;
+  --code: #f0f2f6;
+  --accent: #0b6fd0;
+  --rust: #dea584;
+  --python: #3572a5;
+  --sans: "Fira Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Fira Code", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --fg: #e6e9ef; --muted: #98a0ae; --line: #252a33; --code: #181c22; --accent: #5cb2ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --fg: #e6e9ef; --muted: #98a0ae; --line: #252a33; --code: #181c22; --accent: #5cb2ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 300 1.0625rem/1.65 var(--sans);
+}
+main {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 3rem;
+  display: grid;
+  gap: 3.5rem;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+b, h2, h3 { font-weight: 500; }
+h2 {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+p { margin: 0; }
+code, pre { font-family: var(--mono); font-size: 0.875rem; }
+section { display: grid; gap: 1.25rem; min-width: 0; }
+section > h3 { margin: 0 0 -0.75rem; font-size: 1.25rem; }
+
+header { display: grid; gap: 1.5rem; }
+.pitch { font-size: 1.5rem; line-height: 1.4; text-wrap: balance; }
+h1 { margin: 0; font-weight: 500; font-size: 1.75rem; line-height: 1.25; }
+.lead { color: var(--muted); max-width: 40rem; }
+.install { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.5rem; }
+.cmd {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  background: var(--code); border-radius: 6px; padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+}
+.cmd button {
+  font: 500 0.75rem var(--sans); color: var(--muted); background: none;
+  border: 1px solid var(--line); border-radius: 4px; padding: 0.25rem 0.5rem; cursor: pointer;
+}
+.cmd button:hover { color: var(--fg); }
+.links { display: flex; gap: 1.25rem; font-weight: 500; }
+
+.repos { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+.repo {
+  border: 1px solid var(--line); border-radius: 6px; padding: 1rem;
+  display: flex; flex-direction: column; gap: 0.5rem; min-width: 0;
+}
+.repo h3 { margin: 0; font-size: 0.9375rem; display: flex; align-items: center; gap: 0.5rem; }
+.repo h3 svg { width: 1rem; height: 1rem; flex: none; fill: var(--muted); }
+.repo p { flex: 1; color: var(--muted); font-size: 0.875rem; line-height: 1.5; }
+.meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1rem; font-size: 0.8125rem; color: var(--muted); }
+.meta span { display: inline-flex; align-items: center; gap: 0.375rem; }
+.meta a { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.meta a:hover { color: var(--accent); }
+.lang { width: 0.75rem; height: 0.75rem; border-radius: 50%; display: inline-block; }
+.lang.rust { background: var(--rust); }
+.lang.python { background: var(--python); }
+
+pre {
+  margin: 0; background: var(--code); border-radius: 6px;
+  padding: 1rem 1.125rem; overflow-x: auto; line-height: 1.6;
+}
+
+.bench { display: grid; gap: 2.5rem; }
+figure { margin: 0; display: grid; gap: 0.875rem; min-width: 0; }
+figcaption b { font-weight: 500; }
+figure img {
+  width: 100%; height: auto; display: block;
+  background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem;
+}
+.note { color: var(--muted); font-size: 0.9375rem; }
+.table-wrap { overflow-x: auto; }
+.results { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.results th, .results td { text-align: right; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.results th:first-child, .results td:first-child { text-align: left; }
+.results th { font-weight: 500; font-size: 0.875rem; color: var(--muted); }
+.results .ours td { font-weight: 500; }
+/* A table of sentences: they wrap, and read from the left. */
+.results.text th, .results.text td { white-space: normal; text-align: left; vertical-align: top; }
+.results.text td:first-child { width: 55%; }
+
+.methods { display: grid; gap: 2rem; }
+.method { display: grid; gap: 0.5rem; min-width: 0; }
+.method h3 { margin: 0; font-size: 1.0625rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.625rem; }
+.tag {
+  font-size: 0.75rem; font-weight: 500; letter-spacing: 0.02em; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; line-height: 1.5;
+}
+.effect { border-left: 2px solid var(--accent); padding-left: 0.75rem; }
+.src { color: var(--muted); font-size: 0.875rem; }
+
+footer {
+  border-top: 1px solid var(--line); padding-top: 1.5rem;
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem;
+  color: var(--muted); font-size: 0.9375rem;
+}
+@media (max-width: 30rem) {
+  main { padding-top: 3rem; gap: 3rem; }
+  .results th, .results td { padding: 0.5rem 0.4rem; }
+  .pitch { font-size: 1.3125rem; }
+}
+</style>
+</head>
+<body>
+<nav class="site" aria-label="Qevedo">
+  <div class="site-inner">
+    <a class="site-home" href="/" aria-label="Qevedo home"><svg viewBox="0 0 252.1 60" aria-hidden="true"><g fill="currentColor" transform="matrix(4.784689009770447,0,0,4.784689009770447,-2.296649545305371,-17.70334884904667)"><path d="M0.48 9.18C0.48 11.98 2.73 14.14 5.66 14.15C6.44 15.47 7.55 16.24 8.78 16.24C9.69 16.24 10.68 15.83 11.44 15.16L10.78 14C10.14 14.50 9.49 14.81 8.97 14.81C8.41 14.81 7.87 14.48 7.34 13.90C9.42 13.26 10.86 11.42 10.86 9.18C10.86 6.38 8.60 4.24 5.67 4.24C2.74 4.24 0.48 6.37 0.48 9.18ZM2.16 9.18C2.16 7.24 3.75 5.73 5.68 5.73C7.60 5.73 9.17 7.24 9.17 9.18C9.17 11.13 7.60 12.67 5.68 12.67C3.77 12.67 2.16 11.13 2.16 9.18ZM12.04 10.37C12.04 12.61 13.55 14.14 15.85 14.14C17.14 14.14 18.20 13.68 18.93 12.88L18.07 11.97C17.53 12.53 16.79 12.84 15.97 12.84C14.80 12.84 13.92 12.12 13.66 10.98L19.29 10.98C19.49 8.29 18.42 6.58 15.81 6.58C13.59 6.59 12.04 8.12 12.04 10.37ZM13.64 9.80C13.82 8.61 14.64 7.87 15.82 7.87C17.04 7.87 17.84 8.60 17.89 9.80ZM19.80 6.64L22.68 14.08L24.35 14.08L27.20 6.64L25.59 6.64L23.55 12.50L21.48 6.64ZM27.62 10.37C27.62 12.61 29.13 14.14 31.43 14.14C32.72 14.14 33.78 13.68 34.51 12.88L33.66 11.97C33.11 12.53 32.37 12.84 31.56 12.84C30.38 12.84 29.50 12.12 29.25 10.98L34.87 10.98C35.07 8.29 34.01 6.58 31.39 6.58C29.18 6.59 27.62 8.12 27.62 10.37ZM29.22 9.80C29.40 8.61 30.23 7.87 31.40 7.87C32.62 7.87 33.42 8.60 33.47 9.80ZM35.85 10.33C35.85 12.60 37.28 14.15 39.42 14.15C40.61 14.15 41.51 13.68 42.04 12.81L42.04 14.08L43.65 14.08L43.65 3.70L42.04 3.70L42.04 7.92C41.50 7.06 40.60 6.57 39.40 6.57C37.30 6.57 35.85 8.09 35.85 10.33ZM37.46 10.39C37.48 8.96 38.42 7.94 39.76 7.94C41.10 7.94 42.04 8.95 42.04 10.39C42.04 11.80 41.10 12.81 39.76 12.81C38.40 12.81 37.48 11.80 37.46 10.39ZM45.40 10.36C45.40 12.60 46.98 14.14 49.29 14.14C51.59 14.14 53.17 12.60 53.17 10.36C53.17 8.11 51.59 6.58 49.29 6.58C46.98 6.58 45.40 8.11 45.40 10.36ZM47.01 10.37C47.01 8.95 47.95 7.97 49.29 7.97C50.62 7.97 51.56 8.95 51.56 10.37C51.56 11.82 50.62 12.80 49.29 12.80C47.95 12.80 47.01 11.82 47.01 10.37Z"></path></g></svg></a>
+    <div class="site-links">
+      <a href="/decompose/">Decompose</a>
+      <a href="/multicore/">Multi-core</a>
+      <a href="/methods/" aria-current="page">Methods</a>
+      <a href="/benchmarks/">Benchmarks</a>
+      <a href="https://github.com/qevedo">GitHub</a>
+    </div>
+  </div>
+</nav>
+<main>
+  <header>
+    <h1>Methods</h1>
+    <p class="lead">The techniques behind each tool: where each comes from, what it does on our benchmarks, and where its code is. Some reproduce published methods, some extend them, and some were designed here. The measured effects come from the scripts behind the <a href="/benchmarks/">benchmarks</a>.</p>
+  </header>
+
+  <section id="compiler">
+    <h2>Compiler</h2>
+    <div class="methods">
+      <article class="method">
+        <h3>Phase folding <span class="tag">published</span></h3>
+        <p>Every wire carries a parity of the circuit's inputs: CNOTs XOR parities, X gates flip them, and other gates start new ones. Diagonal rotations on the same parity merge into one, however many gates lie between them, and the CNOTs they kept apart then cancel.</p>
+        <p class="effect">Adders: 19% fewer CNOTs than Qiskit at level 3 (196 against 241 at 32 qubits); QFT, QAOA and Heisenberg chains: 7–23% fewer gates in all.</p>
+        <p class="src">Amy, Maslov and Mosca, <a href="https://arxiv.org/abs/1303.2042">IEEE TCAD 2014</a>; Nam, Ross, Su, Childs and Maslov, <a href="https://arxiv.org/abs/1710.07345">npj QI 2018</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/phase_folding.rs">phase_folding.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>Two-qubit synthesis in context <span class="tag">ours</span></h3>
+        <p>Runs of gates on one pair of qubits are resynthesized from their 4×4 unitary with the fewest two-qubit gates (KAK). Many syntheses use that many; they differ in their single-qubit gates. A block's outer gates merge with its neighbours' afterwards, so QCC picks the one with the fewest gates between its first and last two-qubit gate, not the fewest in isolation.</p>
+        <p class="effect">Quantum Volume: 1% fewer gates than synthesizing each block alone, which brings QCC level with Qiskit there.</p>
+        <p class="src">KAK and templates after Vatan and Williams, <a href="https://arxiv.org/abs/quant-ph/0308006">PRA 2004</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/two_qubit.rs">two_qubit.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>SWAP elision and permutation-aware synthesis <span class="tag">extended</span></h3>
+        <p>A SWAP costs three CNOTs; relabelling the qubits after it costs nothing. The same holds for a SWAP hidden in a block: a CNOT each way is a SWAP and one CNOT, so a block that is a SWAP away from fewer CNOTs is synthesized that way. QCC relabels whenever the moved qubits are measured last, so the output is exactly equivalent, and otherwise when asked to, reporting where each qubit's state ends.</p>
+        <p class="effect">QFT: 12, 24 and 48 fewer CNOTs at 8, 16 and 32 qubits; random Clifford+T: up to 5% fewer.</p>
+        <p class="src">As Qiskit's ElidePermutations and pytket's implicit wire swaps · <a href="https://github.com/qevedo/qcc/blob/master/core/src/permutation.rs">permutation.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>Numerical synthesis for any entangling gate <span class="tag">ours</span></h3>
+        <p>For native gates without a known template (iSWAP, √iSWAP, √SWAP, …), the fewest uses are found numerically: first matching the target's Makhlin invariants, then the single-qubit gates around them, both by Levenberg–Marquardt from seeded starts.</p>
+        <p class="src">Try it in the <a href="/decompose/">decomposition playground</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/numeric.rs">numeric.rs</a></p>
+      </article>
+    </div>
+  </section>
+
+  <section id="multicore">
+    <h2>Multi-core mapping</h2>
+    <div class="methods">
+      <article class="method">
+        <h3>Hungarian Qubit Assignment <span class="tag">published</span></h3>
+        <p>Assigns qubits to the cores of a modular machine slice by slice, solving each slice as an assignment problem with lookahead, so that the qubits of each gate meet in one core with few teleportations.</p>
+        <p class="effect">1.24× fewer teleportations than FGP-rOEE over 105 configurations, 7.8× faster.</p>
+        <p class="src">Escofet et al., <a href="https://arxiv.org/abs/2309.12182">arXiv:2309.12182</a> · <a href="https://github.com/qevedo/qcc/tree/master/core/src/multicore">multicore/</a></p>
+      </article>
+      <article class="method">
+        <h3>Latency-aware assignment <span class="tag">ours</span></h3>
+        <p>Counting teleportations treats every move alike, but a move that waits for a busy link delays its gate. HQA-latency also weighs how long each move would hold up its gate, given how many EPR pairs each link can supply at once.</p>
+        <p class="effect">6–12% shorter circuits than HQA on average, and never longer.</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/docs/MULTICORE.md">MULTICORE.md</a></p>
+      </article>
+      <article class="method">
+        <h3>Routing with communication ports <span class="tag">ours</span></h3>
+        <p>Inside each core, qubits are routed with SABRE to fixed communication qubits wired to the links, with an exchange when a port is taken, and EPR pairs are scheduled into the links' free time.</p>
+        <p class="effect">On TeleSABRE's own device and circuits: 0.26× its EPR pairs and 0.51× its SWAPs, and no deadlocks.</p>
+        <p class="src">SABRE: Li, Ding and Xie, <a href="https://arxiv.org/abs/1809.02573">ASPLOS 2019</a> · <a href="https://github.com/qevedo/qcc/tree/master/core/src/routing">routing/</a></p>
+      </article>
+    </div>
+  </section>
+
+  <section id="simulator">
+    <h2>Simulator</h2>
+    <div class="methods">
+      <article class="method">
+        <h3>Fused, cache-blocked state vectors <span class="tag">extended</span></h3>
+        <p>The state is stored as qsim stores it, eight real and eight imaginary parts per cache line, with AVX2 kernels for 1–6-qubit gates. Dependent gates fuse into matrices of up to 4 qubits, and every gate of a stage runs on 1&nbsp;MiB regions that stay in L2, relabelling qubits instead of moving them back.</p>
+        <p class="effect">830 gates become 69 kernels and 9 sweeps over memory; 3–4× faster than qsim.</p>
+        <p class="src"><a href="https://github.com/qevedo/qevedo-simulator">qevedo-simulator</a></p>
+      </article>
+      <article class="method">
+        <h3>Stabilizer tableaux and Pauli frames <span class="tag">extended</span></h3>
+        <p>Clifford circuits run once on a tableau that switches between row and column layouts as the work requires; the other shots propagate bit-packed Pauli frames in parallel, cache-sized blocks.</p>
+        <p class="effect">A distance-101 surface code, 20,401 qubits: 10,000 shots in 1.5&nbsp;s, 8× faster than Stim.</p>
+        <p class="src">After Aaronson and Gottesman, <a href="https://arxiv.org/abs/quant-ph/0406196">PRA 2004</a>, and Gidney, <a href="https://arxiv.org/abs/2103.02202">Quantum 2021</a></p>
+      </article>
+      <article class="method">
+        <h3>Clifford frames around a small dense state <span class="tag">ours</span></h3>
+        <p>For Clifford circuits with a few T gates, the state is a Clifford frame applied to a dense state of only the qubits the non-Clifford gates touch. The peak size is computed before simulating, so the backend can be chosen automatically.</p>
+        <p class="effect">200 qubits with 20 T gates: 1000 shots in 0.11&nbsp;s.</p>
+        <p class="src"><a href="https://github.com/qevedo/qevedo-simulator">qevedo-simulator</a></p>
+      </article>
+    </div>
+  </section>
+
+  <footer>
+    <span>Qevedo · open source under the MIT license</span>
+    <a href="https://github.com/qevedo">github.com/qevedo</a>
+  </footer>
+</main>
+
+</body>
+</html>
