@@ -187,10 +187,22 @@ footer {
       <table class="results">
         <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC</td><td>0.968×</td><td>0.901×</td><td>8 ms</td></tr>
-          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>9 ms</td></tr>
-          <tr><td>pytket</td><td>1.002×</td><td>1.123×</td><td>1098 ms</td></tr>
-          <tr><td>UCC</td><td>1.017×</td><td>2.210×</td><td>30 ms</td></tr>
+          <tr class="ours"><td>QCC</td><td>0.968×</td><td>0.901×</td><td>3 ms</td></tr>
+          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>6 ms</td></tr>
+          <tr><td>pytket</td><td>1.002×</td><td>1.123×</td><td>626 ms</td></tr>
+          <tr><td>UCC</td><td>1.017×</td><td>2.210×</td><td>15 ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours.</p>
+    <div class="table-wrap">
+      <table class="results">
+        <thead><tr><th>Heavy-hex, 8–16 qubits</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
+        <tbody>
+          <tr class="ours"><td>QCC, CX</td><td>0.951×</td><td>0.828×</td><td>43 ms</td></tr>
+          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>65 ms</td></tr>
+          <tr class="ours"><td>QCC, CZ</td><td>0.943×</td><td>0.884×</td><td>64 ms</td></tr>
+          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>63 ms</td></tr>
         </tbody>
       </table>
     </div>

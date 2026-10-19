@@ -200,6 +200,24 @@ footer {
     </div>
   </section>
 
+  <section id="routing">
+    <h2>Layout and routing</h2>
+    <div class="methods">
+      <article class="method">
+        <h3>Perfect layouts <span class="tag">extended</span></h3>
+        <p>When the pairs of qubits a circuit's gates use form a graph that fits inside the chip's coupling graph, a subgraph search places them so that no SWAP is needed. The circuit is optimized first, so fewer pairs remain to fit.</p>
+        <p class="effect">GHZ states and Heisenberg chains on a heavy-hex chip: no SWAP at all.</p>
+        <p class="src">As Qiskit's VF2Layout · <a href="https://github.com/qevedo/qcc/blob/master/core/src/routing/perfect.rs">perfect.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>SWAPs counted for what they cost <span class="tag">published</span></h3>
+        <p>A SWAP right after gates on the same pair merges into them: after a CNOT it costs one more CNOT, after a generic block nothing. The router lowers the score of such SWAPs by the CNOTs they save, and keeps the routing whose SWAPs cost least once merged.</p>
+        <p class="effect">With more layout trials, 8% fewer two-qubit gates on a heavy-hex chip: the 16-qubit QFT went from 479 CNOTs to 357, and QCC alone now uses 5% fewer than Qiskit's level 3.</p>
+        <p class="src">NASSC: Liu, Li and Zhou, <a href="https://arxiv.org/abs/2205.10596">HPCA 2022</a>; SABRE: Li, Ding and Xie, <a href="https://arxiv.org/abs/1809.02573">ASPLOS 2019</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/routing/sabre.rs">sabre.rs</a></p>
+      </article>
+    </div>
+  </section>
+
   <section id="multicore">
     <h2>Multi-core mapping</h2>
     <div class="methods">
