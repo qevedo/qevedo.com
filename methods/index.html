@@ -171,7 +171,7 @@ footer {
       <article class="method">
         <h3>Phase folding <span class="tag">published</span></h3>
         <p>Every wire carries a parity of the circuit's inputs: CNOTs XOR parities, X gates flip them, and other gates start new ones. Diagonal rotations on the same parity merge into one, however many gates lie between them, and the CNOTs they kept apart then cancel.</p>
-        <p class="effect">Adders: 19% fewer CNOTs than Qiskit at level 3 (196 against 241 at 32 qubits); QFT, QAOA and Heisenberg chains: 7–23% fewer gates in all.</p>
+        <p class="effect">Adders: 19% fewer CNOTs than Qiskit at level 3 (196 against 241 at 32 qubits); QFT, QAOA and Heisenberg chains: 7–25% fewer gates in all; compiling through CNOTs first does the same for CZ devices (adders: 40 CZs instead of 49).</p>
         <p class="src">Amy, Maslov and Mosca, <a href="https://arxiv.org/abs/1303.2042">IEEE TCAD 2014</a>; Nam, Ross, Su, Childs and Maslov, <a href="https://arxiv.org/abs/1710.07345">npj QI 2018</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/phase_folding.rs">phase_folding.rs</a></p>
       </article>
       <article class="method">
@@ -179,6 +179,12 @@ footer {
         <p>Runs of gates on one pair of qubits are resynthesized from their 4×4 unitary with the fewest two-qubit gates (KAK). Many syntheses use that many; they differ in their single-qubit gates. A block's outer gates merge with its neighbours' afterwards, so QCC picks the one with the fewest gates between its first and last two-qubit gate, not the fewest in isolation.</p>
         <p class="effect">Quantum Volume: 1% fewer gates than synthesizing each block alone, which brings QCC level with Qiskit there.</p>
         <p class="src">KAK and templates after Vatan and Williams, <a href="https://arxiv.org/abs/quant-ph/0308006">PRA 2004</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/two_qubit.rs">two_qubit.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>Moving gates through symmetric blocks <span class="tag">ours</span></h3>
+        <p>An XX + YY + ZZ interaction, as in Heisenberg models, commutes with the same rotation on both qubits, so the single-qubit gates around such a block are not fixed: a factor can pass through it from one side to the other. Blocks are synthesized one at a time, so QCC then picks, for each symmetric block, the factor that leaves the gates between it and its neighbours cheapest.</p>
+        <p class="effect">Heisenberg chains: 8–9% fewer gates with CX (1173 against Qiskit's 1568 at 32 qubits), and with CZ 7–13% fewer than Qiskit instead of a fifth more.</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/symmetric_blocks.rs">symmetric_blocks.rs</a></p>
       </article>
       <article class="method">
         <h3>SWAP elision and permutation-aware synthesis <span class="tag">extended</span></h3>
