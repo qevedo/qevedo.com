@@ -152,7 +152,7 @@ footer {
 <main>
   <header>
     <h1>Benchmarks</h1>
-    <p class="lead">Every number on this page comes from a script in the repositories, with its raw results, on an Intel i9-14900K with 24 cores and 62&nbsp;GB of RAM.</p>
+    <p class="lead">Every number on this page comes from a script in the repositories, with its raw results, on an Intel i9-14900K with 24 cores and 62&nbsp;GB of RAM unless it says otherwise.</p>
   </header>
 
   <section id="simulator">
@@ -176,33 +176,39 @@ footer {
         <a href="/images/benchmarks/nearclifford.svg"><img src="/images/benchmarks/nearclifford.svg" alt="Bar chart: seconds for 1000 shots of random Clifford+T circuits for qvd and Qiskit Aer's methods" width="673" height="316" loading="lazy"></a>
       </figure>
     </div>
+    <div class="bench">
+      <figure>
+        <figcaption><b>Expectation values.</b> <code>&lt;Z62&gt;</code> of IBM's 127-qubit, 20-step kicked Ising utility circuit by Pauli propagation in 0.25–9.6&nbsp;s: the same value and strings as IBM's pauli-prop, 15–117× faster end to end on 4 threads. Measured on a 4-vCPU Intel Xeon virtual machine.</figcaption>
+        <a href="/images/benchmarks/pauliprop.svg"><img src="/images/benchmarks/pauliprop.svg" alt="Bar chart: seconds for the expectation value of the 127-qubit kicked Ising circuit for qvd on 4 and 1 threads and IBM pauli-prop" width="611" height="305" loading="lazy"></a>
+      </figure>
+    </div>
     <p class="note">Method, raw data and scripts to reproduce every number: <a href="https://github.com/qevedo/qevedo-simulator/tree/master/benchmarks">qevedo-simulator/benchmarks</a>.</p>
 
   </section>
 
   <section id="compiler">
     <h2>qevedo-compiler</h2>
-    <p class="note">24 circuits (QFT, QAOA, Quantum Volume, GHZ, Heisenberg, adders, Clifford+T, random Hamiltonians) of 8 to 32 qubits, compiled for rz, sx, x and cx; QCC uses no more two-qubit gates than Qiskit on any of them. Gates relative to Qiskit at optimization level 3 (geometric means) and median time; lower is better.</p>
+    <p class="note">24 circuits (QFT, QAOA, Quantum Volume, GHZ, Heisenberg, adders, Clifford+T, random Hamiltonians) of 8 to 32 qubits, compiled for rz, sx, x and cx; QCC uses no more two-qubit gates than Qiskit on any of them. Gates relative to Qiskit at optimization level 3 (geometric means) and median time, on a 4-vCPU Intel Xeon virtual machine; lower is better.</p>
     <div class="table-wrap">
       <table class="results">
         <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC</td><td>0.942×</td><td>0.916×</td><td>4 ms</td></tr>
-          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>6 ms</td></tr>
-          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>978 ms</td></tr>
-          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>14 ms</td></tr>
+          <tr class="ours"><td>QCC</td><td>0.940×</td><td>0.882×</td><td>13 ms</td></tr>
+          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>18 ms</td></tr>
+          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>3036 ms</td></tr>
+          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>46 ms</td></tr>
         </tbody>
       </table>
     </div>
-    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours.</p>
+    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. QCC is slower than Qiskit on the chip (a median of 90&nbsp;ms against 48 with CX); without one it is faster on 18 of the 24 circuits, but up to 5× slower on Quantum Volume and 3–14× on the Hamiltonians.</p>
     <div class="table-wrap">
       <table class="results">
         <thead><tr><th>Heavy-hex, 8–16 qubits</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC, CX</td><td>0.943×</td><td>0.835×</td><td>50 ms</td></tr>
-          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>57 ms</td></tr>
-          <tr class="ours"><td>QCC, CZ</td><td>0.937×</td><td>0.881×</td><td>69 ms</td></tr>
-          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>42 ms</td></tr>
+          <tr class="ours"><td>QCC, CX</td><td>0.942×</td><td>0.830×</td><td>90 ms</td></tr>
+          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>48 ms</td></tr>
+          <tr class="ours"><td>QCC, CZ</td><td>0.935×</td><td>0.878×</td><td>115 ms</td></tr>
+          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>54 ms</td></tr>
         </tbody>
       </table>
     </div>

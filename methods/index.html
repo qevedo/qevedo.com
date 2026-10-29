@@ -181,9 +181,15 @@ footer {
       </article>
       <article class="method">
         <h3>Pauli networks <span class="tag">extended</span></h3>
-        <p>A Hamiltonian simulation step is a list of Pauli rotations, each conventionally written with its own CNOT ladders. QCC reads the circuit back as rotations and one Clifford, and builds it again greedily: each controlled-Pauli gate is the one that most lowers the weights of the rotations coming next, so commuting rotations share their CNOTs. It is kept only when it is cheaper.</p>
-        <p class="effect">One Trotter step of random Hamiltonians: 43% fewer CNOTs than Qiskit at 8 qubits (108 against 191) and 17% at 16.</p>
-        <p class="src">After Rustiq: Goubault de Brugière and Martiel, <a href="https://arxiv.org/abs/2404.03280">arXiv:2404.03280</a>, and pytket's GreedyPauliSimp; Clifford synthesis after Bravyi et al., <a href="https://arxiv.org/abs/2105.02291">arXiv:2105.02291</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
+        <p>A Hamiltonian simulation step is a list of Pauli rotations, each conventionally written with its own CNOT ladders. QCC reads the circuit back as rotations and one Clifford, and builds it again greedily: each controlled-Pauli gate is the one that most lowers the weights of the rotations coming next, so commuting rotations share their CNOTs. It is kept only when it needs no more two-qubit gates and no more gates in all.</p>
+        <p class="effect">One Trotter step of random Hamiltonians: 44% fewer CNOTs than Qiskit at 8 qubits (107 against 191) and 20% at 16 (313 against 393), with 38% and 19% fewer gates in all.</p>
+        <p class="src">After Rustiq: Goubault de Brugière and Martiel, <a href="https://arxiv.org/abs/2404.03280">arXiv:2404.03280</a>, and pytket's GreedyPauliSimp, whose seeded trials QCC also runs; Clifford synthesis after Bravyi et al., <a href="https://arxiv.org/abs/2105.02291">arXiv:2105.02291</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>Cheap frames for Pauli networks <span class="tag">ours</span></h3>
+        <p>Single-qubit gates are most of what a Pauli network costs. The basis changes that set up each CNOT are not undone after it: the rotations still to come are read in the new frame, which leaves their weights alone, and the frame is paid for once, at the end. Each CNOT is placed whichever way round needs fewer basis changes, and those use √X, native on IBM devices, rather than Hadamards.</p>
+        <p class="effect">About half the network's single-qubit gates: on a 16-qubit Hamiltonian, 792 gates in all instead of 1285, against Qiskit's 972 and pytket's 887.</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
       </article>
       <article class="method">
         <h3>Two-qubit synthesis in context <span class="tag">ours</span></h3>
@@ -267,6 +273,12 @@ footer {
         <p>Clifford circuits run once on a tableau that switches between row and column layouts as the work requires; the other shots propagate bit-packed Pauli frames in parallel, cache-sized blocks.</p>
         <p class="effect">A distance-101 surface code, 20,401 qubits: 10,000 shots in 1.5&nbsp;s, 8× faster than Stim.</p>
         <p class="src">After Aaronson and Gottesman, <a href="https://arxiv.org/abs/quant-ph/0406196">PRA 2004</a>, and Gidney, <a href="https://arxiv.org/abs/2103.02202">Quantum 2021</a></p>
+      </article>
+      <article class="method">
+        <h3>Sparse Pauli propagation <span class="tag">extended</span></h3>
+        <p>For an expectation value, the observable is propagated backwards through the circuit as a sum of Pauli strings: Clifford gates collect in a frame and cost nothing, each non-Clifford rotation can split a string in two, and strings with small coefficients are dropped. The strings live in 64 hash maps that each rotation updates in two parallel passes.</p>
+        <p class="effect"><code>&lt;Z62&gt;</code> of IBM's 127-qubit kicked Ising utility circuit: the same value and strings as IBM's pauli-prop, 15–117× faster end to end on 4 threads.</p>
+        <p class="src">Sparse Pauli dynamics after Begušić, Gray and Chan, <a href="https://arxiv.org/abs/2308.05077">arXiv:2308.05077</a> · <a href="https://github.com/qevedo/qevedo-simulator">qevedo-simulator</a></p>
       </article>
       <article class="method">
         <h3>Clifford frames around a small dense state <span class="tag">ours</span></h3>
