@@ -204,6 +204,18 @@ footer {
         <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/symmetric_blocks.rs">symmetric_blocks.rs</a></p>
       </article>
       <article class="method">
+        <h3>Gathering blocks through commuting gates <span class="tag">extended</span></h3>
+        <p>Two gates on the same pair of qubits fall in different blocks when a gate on one of them and a third qubit lies between, even if that gate commutes with one of them: <code>cx a,b; cx a,c; cx b,a</code> is a SWAP and one CNOT once <code>cx a,c</code> moves aside. QCC moves such gates out of the way when they commute exactly with what they cross (single-qubit gates counted together), taking along the gates that depend on them, and only where the gathered block needs fewer CNOTs; the circuit is kept only when it needs no more two-qubit gates and no more gates in all.</p>
+        <p class="effect">Random Clifford+T: 150 CNOTs instead of 154 at 16 qubits, and 310 at 32, as many as pytket with fewer gates in all (1034 against 1039). On a heavy-hex chip: the 16-qubit QFT 353 CNOTs instead of 357 (Qiskit 356), the 16-qubit QAOA 180 instead of 188, both with CX; four of the 32 chip results got worse in one count or both.</p>
+        <p class="src">As tket's Clifford simplification: Fagan and Duncan, <a href="https://arxiv.org/abs/1901.10114">arXiv:1901.10114</a>; Sivarajah et al., <a href="https://arxiv.org/abs/2003.10611">arXiv:2003.10611</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/commuting_blocks.rs">commuting_blocks.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>Single-qubit trades through CNOTs <span class="tag">ours</span></h3>
+        <p>A CNOT commutes with a Z rotation on its control and an X rotation on its target, so the runs of single-qubit gates on either side can hand such a rotation across. QCC chooses the angles that make both runs cheapest. It hides Z rotations from phase folding, so it runs only on a circuit that will not be optimized again.</p>
+        <p class="effect">With gathering, random Clifford+T: 278, 505 and 1034 gates in all at 8, 16 and 32 qubits, instead of 293, 525 and 1074.</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/symmetric_blocks.rs">symmetric_blocks.rs</a></p>
+      </article>
+      <article class="method">
         <h3>SWAP elision and permutation-aware synthesis <span class="tag">extended</span></h3>
         <p>A SWAP costs three CNOTs; relabelling the qubits after it costs nothing. The same holds for a SWAP hidden in a block: a CNOT each way is a SWAP and one CNOT, so a block that is a SWAP away from fewer CNOTs is synthesized that way. QCC relabels whenever the moved qubits are measured last, so the output is exactly equivalent, and otherwise when asked to, reporting where each qubit's state ends.</p>
         <p class="effect">QFT: 12, 24 and 48 fewer CNOTs at 8, 16 and 32 qubits; random Clifford+T: up to 5% fewer.</p>
@@ -229,7 +241,7 @@ footer {
       <article class="method">
         <h3>SWAPs counted for what they cost <span class="tag">published</span></h3>
         <p>A SWAP right after gates on the same pair merges into them: after a CNOT it costs one more CNOT, after a generic block nothing. The router lowers the score of such SWAPs by the CNOTs they save, and keeps the routing whose SWAPs cost least once merged.</p>
-        <p class="effect">With more layout trials, 8% fewer two-qubit gates on a heavy-hex chip: the 16-qubit QFT went from 479 CNOTs to 357, and QCC alone now uses 5% fewer than Qiskit's level 3.</p>
+        <p class="effect">With more layout trials, 8% fewer two-qubit gates on a heavy-hex chip: the 16-qubit QFT went from 479 CNOTs to 357, and QCC alone used 5% fewer than Qiskit's level 3 (6.5% with CX since 0.4.2).</p>
         <p class="src">NASSC: Liu, Li and Zhou, <a href="https://arxiv.org/abs/2205.10596">HPCA 2022</a>; SABRE: Li, Ding and Xie, <a href="https://arxiv.org/abs/1809.02573">ASPLOS 2019</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/routing/sabre.rs">sabre.rs</a></p>
       </article>
     </div>

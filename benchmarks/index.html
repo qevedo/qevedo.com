@@ -197,26 +197,26 @@ footer {
       <table class="results">
         <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC</td><td>0.940×</td><td>0.882×</td><td>13 ms</td></tr>
-          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>18 ms</td></tr>
-          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>3036 ms</td></tr>
-          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>46 ms</td></tr>
+          <tr class="ours"><td>QCC</td><td>0.938×</td><td>0.877×</td><td>8 ms</td></tr>
+          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>12 ms</td></tr>
+          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>1730 ms</td></tr>
+          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>32 ms</td></tr>
         </tbody>
       </table>
     </div>
-    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. QCC is slower than Qiskit on the chip (a median of 90&nbsp;ms against 48 with CX); without one it is faster on 18 of the 24 circuits, but up to 5× slower on Quantum Volume and 3–14× on the Hamiltonians.</p>
+    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. QCC is slower than Qiskit on the chip (a median of 56&nbsp;ms against 33 with CX); without one it is faster on 17 of the 24 circuits, but 4.3× slower on the 32-qubit Quantum Volume circuit, 3–26× on the Hamiltonians and up to 9× on Clifford+T, where it finishes each circuit twice to compare (single runs, which vary on this machine).</p>
     <div class="table-wrap">
       <table class="results">
         <thead><tr><th>Heavy-hex, 8–16 qubits</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC, CX</td><td>0.942×</td><td>0.830×</td><td>90 ms</td></tr>
-          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>48 ms</td></tr>
-          <tr class="ours"><td>QCC, CZ</td><td>0.935×</td><td>0.878×</td><td>115 ms</td></tr>
-          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>54 ms</td></tr>
+          <tr class="ours"><td>QCC, CX</td><td>0.935×</td><td>0.825×</td><td>56 ms</td></tr>
+          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>33 ms</td></tr>
+          <tr class="ours"><td>QCC, CZ</td><td>0.917×</td><td>0.868×</td><td>109 ms</td></tr>
+          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>32 ms</td></tr>
         </tbody>
       </table>
     </div>
-    <p><b>Inside Qiskit.</b> As Qiskit's optimization stage, <code>transpile(circuit, backend, optimization_method="qcc")</code>, on a heavy-hex chip: with CX, 2% fewer two-qubit gates and 15% fewer gates in all, up to 61% on a QFT; with CZ, 10% fewer gates in all.</p>
+    <p><b>Inside Qiskit.</b> As Qiskit's optimization stage, <code>transpile(circuit, backend, optimization_method="qcc")</code>, on a heavy-hex chip: with CX, 3% fewer two-qubit gates and 16% fewer gates in all, up to 61% on a QFT; with CZ, 5% fewer two-qubit gates and 14% fewer gates in all.</p>
     <p class="note">Scripts and results: <a href="https://github.com/qevedo/qcc/tree/master/benchmarks/compilation">qcc/benchmarks/compilation</a>.</p>
   </section>
 
