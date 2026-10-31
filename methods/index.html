@@ -293,6 +293,12 @@ footer {
         <p class="src">Gidney, <a href="https://arxiv.org/abs/2103.02202">Quantum 2021</a> · <a href="https://github.com/qevedo/qevedo-simulator">qevedo-simulator</a></p>
       </article>
       <article class="method">
+        <h3>Detection events from Stim circuits <span class="tag">extended</span></h3>
+        <p>Stim's circuit format, read with its detector and observable annotations, repeat blocks and measurement-flip probabilities. A detector fires when its measurements' parity differs from the noiseless reference shot's, as in Stim; measurement flips are drawn after the run, since they do not touch the state. The shot-major output decoders take is written in Rust, in parallel, by walking only the set bits, straight into the array NumPy sees.</p>
+        <p class="effect">Stim's generated distance-51 surface code, 10,000 shots: 1.63&nbsp;s on 4 vCPUs against 9.92&nbsp;s for Stim's detector sampler (2.32&nbsp;s on one thread), with the same detection rates and logical error rates.</p>
+        <p class="src">Gidney, <a href="https://arxiv.org/abs/2103.02202">Quantum 2021</a> · <a href="https://github.com/qevedo/qevedo-simulator">qevedo-simulator</a></p>
+      </article>
+      <article class="method">
         <h3>Sparse Pauli propagation <span class="tag">extended</span></h3>
         <p>For an expectation value, the observable is propagated backwards through the circuit as a sum of Pauli strings: Clifford gates collect in a frame and cost nothing, each non-Clifford rotation can split a string in two, and strings with small coefficients are dropped. The strings live in 64 hash maps that each rotation updates in two parallel passes.</p>
         <p class="effect"><code>&lt;Z62&gt;</code> of IBM's 127-qubit kicked Ising utility circuit: the same value and strings as IBM's pauli-prop, 15–117× faster end to end on 4 threads.</p>

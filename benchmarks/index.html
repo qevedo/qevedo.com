@@ -185,6 +185,9 @@ footer {
         <figcaption><b>Noisy Clifford circuits.</b> Surface codes with circuit-level depolarizing noise (p&nbsp;=&nbsp;0.001), the same Stim file in both: at distance 101, 10,000 shots in 6.0&nbsp;s on 4 vCPUs and 14.9&nbsp;s on one thread, against Stim's 37.5&nbsp;s. Level with Stim at d&nbsp;=&nbsp;11. Detection rates agree with Stim within sampling error. Measured on a 4-vCPU Intel Xeon virtual machine.</figcaption>
         <a href="/images/benchmarks/noise.svg"><img src="/images/benchmarks/noise.svg" alt="Line chart: seconds for 10,000 shots of noisy rotated surface codes of distance 11 to 101 for qvd on 4 threads and 1 thread and for Stim's flip simulator and sampler" width="692" height="330" loading="lazy"></a>
       </figure>
+      <figure>
+        <figcaption><b>Stim circuits and detection events.</b> Stim's own generated rotated surface codes (p&nbsp;=&nbsp;0.001 on all four noise parameters), read from Stim's format, 10,000 shots of detection events and observable flips, shot-major arrays from both: at distance 51, 1.63&nbsp;s on 4 vCPUs and 2.32&nbsp;s on one thread against 9.92&nbsp;s for Stim's detector sampler; at distance 21, 0.112&nbsp;s against 0.359&nbsp;s. Detection rates and decoded logical error rates (the same PyMatching decoder) agree with Stim's. Distance 101 did not fit: its result alone is 10&nbsp;GB in either simulator. Measured on a 4-vCPU Intel Xeon virtual machine.</figcaption>
+      </figure>
     </div>
     <p class="note">Method, raw data and scripts to reproduce every number: <a href="https://github.com/qevedo/qevedo-simulator/tree/master/benchmarks">qevedo-simulator/benchmarks</a>.</p>
 
