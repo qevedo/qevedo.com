@@ -192,6 +192,12 @@ footer {
         <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
       </article>
       <article class="method">
+        <h3>Gate counts without Euler angles <span class="tag">ours</span></h3>
+        <p>Two-qubit synthesis prices every way of moving a rotation across a gate by the single-qubit gates it leaves, hundreds of thousands of counts on a large circuit. A count only asks whether some Euler angles are multiples of 2π, and those angles are the phases of products of the unitary's entries, so QCC tests the products directly instead of computing the angles with arctangents. With sparse parities in phase folding and cheaper Clifford tracking in rotation merging, every benchmark circuit compiles faster and to the same gates.</p>
+        <p class="effect">0.73× the time of the previous version in geometric mean over 24 circuits, identical outputs; the 32-qubit Quantum Volume circuit 230&nbsp;ms → 155&nbsp;ms (Qiskit: 69&nbsp;ms).</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/one_qubit.rs">one_qubit.rs</a></p>
+      </article>
+      <article class="method">
         <h3>Two-qubit synthesis in context <span class="tag">ours</span></h3>
         <p>Runs of gates on one pair of qubits are resynthesized from their 4×4 unitary with the fewest two-qubit gates (KAK). Many syntheses use that many; they differ in their single-qubit gates. A block's outer gates merge with its neighbours' afterwards, so QCC picks the one with the fewest gates between its first and last two-qubit gate, not the fewest in isolation.</p>
         <p class="effect">Quantum Volume: 1% fewer gates than synthesizing each block alone, which brings QCC level with Qiskit there.</p>
