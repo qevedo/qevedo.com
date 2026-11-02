@@ -210,7 +210,7 @@ print(result.counts, result.backend)</code></pre>
   <section id="benchmarks">
     <h2>Benchmarks</h2>
     <ul class="highlights">
-      <li><b>Simulator.</b> State vectors 3–4× faster than qsim and 7–12× faster than Qiskit Aer; a distance-101 surface code sampled 8× faster than Stim, and with circuit-level noise 6.3× faster on 4 vCPUs; Stim's own circuit files run directly, with detection events 6.1× faster than Stim's detector sampler at distance 51; expectation values of IBM's 127-qubit utility circuit 15–117× faster than IBM's pauli-prop.</li>
+      <li><b>Simulator.</b> State vectors 3–4× faster than qsim and 7–12× faster than Qiskit Aer; a distance-101 surface code sampled 8× faster than Stim, and with circuit-level noise 6.3× faster on 4 vCPUs; Stim's own circuit files run directly, with detection events 9.0× faster than Stim's detector sampler at distance 51, and bit-packed at distance 101 in 13.6&nbsp;s against Stim's 303&nbsp;s; expectation values of IBM's 127-qubit utility circuit 15–117× faster than IBM's pauli-prop.</li>
       <li><b>Compiler.</b> Fewer gates than Qiskit at level 3: 6% fewer two-qubit gates and 12% fewer in all, and on Hamiltonian simulation up to 44% fewer CNOTs and 38% fewer gates in all; laid out and routed on a heavy-hex chip, 6% fewer two-qubit gates.</li>
       <li><b>Multi-core.</b> Latency-aware mapping, 6–12% shorter circuits than HQA; with routing inside the cores, 0.26× TeleSABRE's EPR pairs on its own device.</li>
     </ul>
