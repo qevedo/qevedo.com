@@ -210,6 +210,12 @@ footer {
         <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/symmetric_blocks.rs">symmetric_blocks.rs</a></p>
       </article>
       <article class="method">
+        <h3>Optimizing to a fixed point for CZ devices <span class="tag">extended</span></h3>
+        <p>For a CZ device QCC reads the circuit through CX, each CZ as H·CX·H, so that phase folding sees parities, then translates it back. Every translation leaves single-qubit gates where the next reading finds more to fold, so one run of the pipeline is far from a fixed point (for CX it nearly is one). QCC runs the pipeline again on its own result while it gets cheaper, up to eight rounds, keeping a round only when it is strictly cheaper. Qiskit's level 3 loops its optimizations the same way, and GUOQ alternates rewriting and resynthesis until nothing improves.</p>
+        <p class="effect">On a heavy-hex chip with CZ: 0.908× Qiskit's two-qubit gates and 0.848× its gates, from 0.917× and 0.868×; the 16-qubit Hamiltonian 1379 → 1292 CZs, 5372 → 4572 gates (Qiskit: 1477, 5357). No circuit got worse; compiling for CZ takes 1.65× as long.</p>
+        <p class="src">Xu, Molavi, Tannu and Albarghouthi, <a href="https://arxiv.org/abs/2411.04104">Optimizing Quantum Circuits, Fast and Slow</a>, ASPLOS 2025; <a href="https://github.com/qevedo/qcc/blob/master/core/src/passes.rs">passes.rs</a></p>
+      </article>
+      <article class="method">
         <h3>Gathering blocks through commuting gates <span class="tag">extended</span></h3>
         <p>Two gates on the same pair of qubits fall in different blocks when a gate on one of them and a third qubit lies between, even if that gate commutes with one of them: <code>cx a,b; cx a,c; cx b,a</code> is a SWAP and one CNOT once <code>cx a,c</code> moves aside. QCC moves such gates out of the way when they commute exactly with what they cross (single-qubit gates counted together), taking along the gates that depend on them, and only where the gathered block needs fewer CNOTs; the circuit is kept only when it needs no more two-qubit gates and no more gates in all.</p>
         <p class="effect">Random Clifford+T: 150 CNOTs instead of 154 at 16 qubits, and 310 at 32, as many as pytket with fewer gates in all (1034 against 1039). On a heavy-hex chip: the 16-qubit QFT 353 CNOTs instead of 357 (Qiskit 356), the 16-qubit QAOA 180 instead of 188, both with CX; four of the 32 chip results got worse in one count or both.</p>
