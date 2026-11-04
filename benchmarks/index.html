@@ -161,29 +161,29 @@ footer {
     <div class="bench">
       <figure>
         <figcaption><b>State vector.</b> 3–4× faster than qsim and 7–12× faster than Qiskit Aer at 26–30 qubits.</figcaption>
-        <a href="/images/benchmarks/statevector.svg"><img src="/images/benchmarks/statevector.svg" alt="Bar chart: seconds per circuit for qvd, qsim and Qiskit Aer on random, QFT and GHZ circuits of 26 to 30 qubits" width="667" height="313" loading="lazy"></a>
+        <a href="/images/benchmarks/statevector.svg"><img src="/images/benchmarks/statevector.svg" alt="Bar chart: seconds per circuit for Qevedo, qsim and Qiskit Aer on random, QFT and GHZ circuits of 26 to 30 qubits" width="667" height="313" loading="lazy"></a>
       </figure>
       <figure>
         <figcaption><b>Clifford circuits.</b> A distance-101 surface code, 20,401 qubits, samples 10,000 shots in 1.5&nbsp;s, 8× faster than Stim. Stim was given one instruction per line here, which slows it on small codes (1.7× at d&nbsp;=&nbsp;21); timed fairly, the two are within 1.3× of each other at d&nbsp;=&nbsp;11 and 21.</figcaption>
-        <a href="/images/benchmarks/stabilizer.svg"><img src="/images/benchmarks/stabilizer.svg" alt="Bar chart: seconds for 10,000 shots of rotated surface codes for qvd, Stim and Qiskit Aer" width="692" height="330" loading="lazy"></a>
+        <a href="/images/benchmarks/stabilizer.svg"><img src="/images/benchmarks/stabilizer.svg" alt="Bar chart: seconds for 10,000 shots of rotated surface codes for Qevedo, Stim and Qiskit Aer" width="692" height="330" loading="lazy"></a>
       </figure>
       <figure>
         <figcaption><b>Matrix product states.</b> 1.6–14× faster than the faster of Qiskit Aer and quimb, with the same truncation.</figcaption>
-        <a href="/images/benchmarks/mps.svg"><img src="/images/benchmarks/mps.svg" alt="Bar chart: seconds for gates and 1000 shots on MPS circuits for qvd, Qiskit Aer and quimb" width="701" height="324" loading="lazy"></a>
+        <a href="/images/benchmarks/mps.svg"><img src="/images/benchmarks/mps.svg" alt="Bar chart: seconds for gates and 1000 shots on MPS circuits for Qevedo, Qiskit Aer and quimb" width="701" height="324" loading="lazy"></a>
       </figure>
       <figure>
         <figcaption><b>Clifford+T.</b> 200 qubits with 20 T gates sample 1000 shots in 0.11&nbsp;s. Every Qiskit Aer method takes over 10 minutes or does not support the circuit.</figcaption>
-        <a href="/images/benchmarks/nearclifford.svg"><img src="/images/benchmarks/nearclifford.svg" alt="Bar chart: seconds for 1000 shots of random Clifford+T circuits for qvd and Qiskit Aer's methods" width="673" height="316" loading="lazy"></a>
+        <a href="/images/benchmarks/nearclifford.svg"><img src="/images/benchmarks/nearclifford.svg" alt="Bar chart: seconds for 1000 shots of random Clifford+T circuits for Qevedo and Qiskit Aer's methods" width="673" height="316" loading="lazy"></a>
       </figure>
     </div>
     <div class="bench">
       <figure>
         <figcaption><b>Expectation values.</b> <code>&lt;Z62&gt;</code> of IBM's 127-qubit, 20-step kicked Ising utility circuit by Pauli propagation in 0.25–9.6&nbsp;s: the same value and strings as IBM's pauli-prop, 15–117× faster end to end on 4 threads. Measured on a 4-vCPU Intel Xeon virtual machine.</figcaption>
-        <a href="/images/benchmarks/pauliprop.svg"><img src="/images/benchmarks/pauliprop.svg" alt="Bar chart: seconds for the expectation value of the 127-qubit kicked Ising circuit for qvd on 4 and 1 threads and IBM pauli-prop" width="611" height="305" loading="lazy"></a>
+        <a href="/images/benchmarks/pauliprop.svg"><img src="/images/benchmarks/pauliprop.svg" alt="Bar chart: seconds for the expectation value of the 127-qubit kicked Ising circuit for Qevedo on 4 and 1 threads and IBM pauli-prop" width="611" height="305" loading="lazy"></a>
       </figure>
       <figure>
         <figcaption><b>Noisy Clifford circuits.</b> Surface codes with circuit-level depolarizing noise (p&nbsp;=&nbsp;0.001), the same Stim file in both: at distance 101, 10,000 shots in 6.0&nbsp;s on 4 vCPUs and 14.9&nbsp;s on one thread, against Stim's 37.5&nbsp;s. Level with Stim at d&nbsp;=&nbsp;11. Detection rates agree with Stim within sampling error. Measured on a 4-vCPU Intel Xeon virtual machine.</figcaption>
-        <a href="/images/benchmarks/noise.svg"><img src="/images/benchmarks/noise.svg" alt="Line chart: seconds for 10,000 shots of noisy rotated surface codes of distance 11 to 101 for qvd on 4 threads and 1 thread and for Stim's flip simulator and sampler" width="692" height="330" loading="lazy"></a>
+        <a href="/images/benchmarks/noise.svg"><img src="/images/benchmarks/noise.svg" alt="Line chart: seconds for 10,000 shots of noisy rotated surface codes of distance 11 to 101 for Qevedo on 4 threads and 1 thread and for Stim's flip simulator and sampler" width="692" height="330" loading="lazy"></a>
       </figure>
       <figure>
         <figcaption><b>Stim circuits and detection events.</b> Stim's own generated rotated surface codes (p&nbsp;=&nbsp;0.001 on all four noise parameters), read from Stim's format, 10,000 shots of detection events and observable flips, shot-major arrays from both (qevedo-simulator 0.1.4): at distance 51, 1.13&nbsp;s on 4 vCPUs and 1.97&nbsp;s on one thread against 10.1&nbsp;s for Stim's detector sampler; at distance 21, 0.080&nbsp;s against 0.423&nbsp;s (0.179&nbsp;s on one thread). Bit-packed on both sides (eight detectors per byte), distance 101 fits in 1.3&nbsp;GB: 13.6&nbsp;s on 4 vCPUs and 34.0&nbsp;s on one thread against Stim's 303&nbsp;s. As bools it would be 10&nbsp;GB and did not fit. Detection rates and decoded logical error rates (the same PyMatching decoder) agree with Stim's. Measured on a 4-vCPU Intel Xeon virtual machine (<a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/bench_output.py">bench_output.py</a>).</figcaption>
