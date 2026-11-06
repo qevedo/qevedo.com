@@ -212,8 +212,14 @@ footer {
       <article class="method">
         <h3>Optimizing to a fixed point for CZ devices <span class="tag">extended</span></h3>
         <p>For a CZ device QCC reads the circuit through CX, each CZ as H·CX·H, so that phase folding sees parities, then translates it back. Every translation leaves single-qubit gates where the next reading finds more to fold, so one run of the pipeline is far from a fixed point (for CX it nearly is one). QCC runs the pipeline again on its own result while it gets cheaper, up to eight rounds, keeping a round only when it is strictly cheaper. Qiskit's level 3 loops its optimizations the same way, and GUOQ alternates rewriting and resynthesis until nothing improves.</p>
-        <p class="effect">On a heavy-hex chip with CZ: 0.908× Qiskit's two-qubit gates and 0.848× its gates, from 0.917× and 0.868×; the 16-qubit Hamiltonian 1379 → 1292 CZs, 5372 → 4572 gates (Qiskit: 1477, 5357). No circuit got worse; compiling for CZ takes 1.65× as long.</p>
+        <p class="effect">On a heavy-hex chip with CZ: 0.908× Qiskit's two-qubit gates and 0.848× its gates, from 0.917× and 0.868×; the 16-qubit Hamiltonian 1379 → 1292 CZs, 5372 → 4572 gates (Qiskit: 1477, 5357). No circuit got worse; compiling for CZ took 1.65× as long, of which 0.4.5 won back most by running candidates side by side (below).</p>
         <p class="src">Xu, Molavi, Tannu and Albarghouthi, <a href="https://arxiv.org/abs/2411.04104">Optimizing Quantum Circuits, Fast and Slow</a>, ASPLOS 2025; <a href="https://github.com/qevedo/qcc/blob/master/core/src/passes.rs">passes.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>Independent candidates side by side <span class="tag">ours</span></h3>
+        <p>Much of compiling is several candidates worked out from the same input and compared at the end: SABRE's 32 layout trials, the direct compilation and the one through CX for a CZ device (in every round of the fixed point above), the Pauli networks, and on a chip the routing of the logical circuit with and without a network. QCC runs them on all cores and takes the results back in the order a loop would produce them, so the first of the cheapest is kept as before and the output does not depend on the threads; the direct candidates, which were compiled twice to try a network, are compiled once. Under 64 instructions everything stays on one thread.</p>
+        <p class="effect">The 112 compilations of the benchmark circuits give byte-identical outputs. On 4 vCPUs, against 0.4.4: 0.51× the time on a heavy-hex chip with CX and 0.62× with CZ (the 16-qubit Hamiltonian with CZ 5.6&nbsp;s → 2.2&nbsp;s, still slower than Qiskit's 0.15&nbsp;s), 0.82× inside Qiskit with CZ; unchanged with CX without a chip.</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/parallel.rs">parallel.rs</a></p>
       </article>
       <article class="method">
         <h3>Gathering blocks through commuting gates <span class="tag">extended</span></h3>

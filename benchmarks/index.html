@@ -213,15 +213,15 @@ footer {
         </tbody>
       </table>
     </div>
-    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. QCC is slower than Qiskit on the chip (a median of 64&nbsp;ms against 42 with CX, 145&nbsp;ms against 28 with CZ, where since 0.4.4 it optimizes again until the circuit stops shrinking); without one it is faster on 20 of the 24 circuits, but slower on the Hamiltonians (2.4–12×) and on the 32-qubit Quantum Volume circuit (191&nbsp;ms against 69, medians of nine runs). Version 0.4.3 took 0.73× the time of 0.4.2 on these circuits, with identical outputs.</p>
+    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. On the chip QCC takes about as long as Qiskit with CX (a median of 38&nbsp;ms against 36) and longer with CZ (145&nbsp;ms against 40, where since 0.4.4 it optimizes again until the circuit stops shrinking; the 16-qubit Hamiltonian takes 2.2&nbsp;s against 0.15). Since 0.4.5 it runs independent work side by side on all cores, SABRE's layout trials and the candidate compilations among them, with byte-identical outputs: 0.51× the time of 0.4.4 on the chip with CX and 0.62× with CZ, on 4 vCPUs. without one it is faster on 20 of the 24 circuits, but slower on the Hamiltonians (2.4–12×) and on the 32-qubit Quantum Volume circuit (191&nbsp;ms against 69, medians of nine runs). Version 0.4.3 took 0.73× the time of 0.4.2 on these circuits, with identical outputs.</p>
     <div class="table-wrap">
       <table class="results">
         <thead><tr><th>Heavy-hex, 8–16 qubits</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC, CX</td><td>0.935×</td><td>0.825×</td><td>64 ms</td></tr>
-          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>42 ms</td></tr>
+          <tr class="ours"><td>QCC, CX</td><td>0.935×</td><td>0.825×</td><td>38 ms</td></tr>
+          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>36 ms</td></tr>
           <tr class="ours"><td>QCC, CZ</td><td>0.908×</td><td>0.848×</td><td>145 ms</td></tr>
-          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>28 ms</td></tr>
+          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>40 ms</td></tr>
         </tbody>
       </table>
     </div>
