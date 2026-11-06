@@ -222,6 +222,12 @@ footer {
         <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/parallel.rs">parallel.rs</a></p>
       </article>
       <article class="method">
+        <h3>Syntheses shared across a compilation <span class="tag">ours</span></h3>
+        <p>A compilation for a CZ device runs the pipeline many times on circuits that differ little: the direct pipeline and the one through CX, round after round, on each candidate's qubits. Most blocks come back with the same unitary to the bit, and each pipeline synthesized them again. QCC keeps one compilation's two-qubit syntheses, for each set of native gates, shared by every pipeline on every thread. A synthesis depends only on the unitary, its objective and the native gates, so this changes no output.</p>
+        <p class="effect">On the 16-qubit Hamiltonian on a heavy-hex chip with CZ, 66% of the synthesis requests had been made before in the same compilation. With block gathering that no longer copies what it tries: 0.83× the time of 0.4.5 on the chip with CZ (the Hamiltonian 2.1&nbsp;s → 1.6&nbsp;s, still slower than Qiskit's 0.15&nbsp;s) and 0.82× inside Qiskit with CZ, byte-identical outputs; unchanged with CX.</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/lower.rs">lower.rs</a> (<code>SynthesisCache</code>)</p>
+      </article>
+      <article class="method">
         <h3>Gathering blocks through commuting gates <span class="tag">extended</span></h3>
         <p>Two gates on the same pair of qubits fall in different blocks when a gate on one of them and a third qubit lies between, even if that gate commutes with one of them: <code>cx a,b; cx a,c; cx b,a</code> is a SWAP and one CNOT once <code>cx a,c</code> moves aside. QCC moves such gates out of the way when they commute exactly with what they cross (single-qubit gates counted together), taking along the gates that depend on them, and only where the gathered block needs fewer CNOTs; the circuit is kept only when it needs no more two-qubit gates and no more gates in all.</p>
         <p class="effect">Random Clifford+T: 150 CNOTs instead of 154 at 16 qubits, and 310 at 32, as many as pytket with fewer gates in all (1034 against 1039). On a heavy-hex chip: the 16-qubit QFT 353 CNOTs instead of 357 (Qiskit 356), the 16-qubit QAOA 180 instead of 188, both with CX; four of the 32 chip results got worse in one count or both.</p>
