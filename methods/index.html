@@ -352,6 +352,12 @@ footer {
         <p class="effect">200 qubits with 20 T gates: 1000 shots in 0.11&nbsp;s.</p>
         <p class="src"><a href="https://github.com/qevedo/qevedo-simulator">qevedo-simulator</a></p>
       </article>
+      <article class="method">
+        <h3>Pauli noise around a small dense state <span class="tag">published</span></h3>
+        <p>Noisy circuits with a few non-Clifford gates, such as magic-state preparation: each shot carries a Pauli frame, errors multiply into it, and shots share one Clifford frame and a dense state until an error makes a rotation act differently on them. The X a measurement would add to the shared frame for one outcome goes into those shots' frames instead, so every Clifford gate is applied once per batch of shots.</p>
+        <p class="effect">Exact: agrees with Clifft and with distributions summed over every error. Still slower than Clifft on noisy random Clifford+T circuits, by 3.4–17.8× (1.5× at 200 qubits on 4 vCPUs), because every shot that errors split off carries its own copy of the dense state; within 1.4× when no error occurs.</p>
+        <p class="src">Clifft: Chase and Labib, <a href="https://arxiv.org/abs/2604.27058">arXiv:2604.27058</a> · <a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/bench_noisy_nearclifford.py">bench_noisy_nearclifford.py</a> · <a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/results/noisy_nearclifford.csv">noisy_nearclifford.csv</a></p>
+      </article>
     </div>
   </section>
 
