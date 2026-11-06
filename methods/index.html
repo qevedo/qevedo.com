@@ -323,6 +323,12 @@ footer {
         <p class="src"><a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/compare_builds.py">compare_builds.py</a> · <a href="https://github.com/qevedo/qevedo-simulator">qevedo-simulator</a></p>
       </article>
       <article class="method">
+        <h3>Inside Qiskit <span class="tag">ours</span></h3>
+        <p>A Qiskit backend (<code>QevedoSimulator</code>) and the V2 primitives (<code>QevedoSampler</code>, <code>QevedoEstimator</code>) in <code>qevedo.simulator.qiskit</code>. Circuits are read gate by gate: the simulator's own gates by name, the other standard gates (<code>ecr</code>, <code>iswap</code>, <code>ryy</code>, …) as their exact matrices, and anything else (QFT, multi-controlled X, <code>UnitaryGate</code>, Pauli evolutions) through its definition, with the global phase kept. The backend and the sampler choose the method per circuit as the simulator does, and keep mid-circuit measurements and resets. The estimator evaluates every observable on one exact state vector per parameter set up to 24 qubits, and uses Pauli propagation beyond that, with a bound on the error.</p>
+        <p class="effect">Through the same Qiskit calls on both sides, on an i9-14900K: Quantum Volume 20 to 28 with 1000 shots 32× to 6.6× faster than Qiskit Aer, QFT 24 and 28 20× and 8.0×, and the estimator 30× to 5.5× faster than Aer's on Quantum Volume 16 to 22 with 50 observables, with values equal to 6e-17. Every standard gate is checked against Qiskit's <code>Statevector</code>, global phase included.</p>
+        <p class="src"><a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/bench_qiskit.py">bench_qiskit.py</a> · <a href="https://github.com/qevedo/qevedo-simulator">qevedo-simulator</a></p>
+      </article>
+      <article class="method">
         <h3>Sparse Pauli propagation <span class="tag">extended</span></h3>
         <p>For an expectation value, the observable is propagated backwards through the circuit as a sum of Pauli strings: Clifford gates collect in a frame and cost nothing, each non-Clifford rotation can split a string in two, and strings with small coefficients are dropped. The strings live in 64 hash maps that each rotation updates in two parallel passes.</p>
         <p class="effect"><code>&lt;Z62&gt;</code> of IBM's 127-qubit kicked Ising utility circuit: the same value and strings as IBM's pauli-prop, 15–117× faster end to end on 4 threads.</p>
