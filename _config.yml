@@ -1,0 +1,5 @@
+# GitHub Pages: keep repository notes off the site.
+exclude:
+  - CLAUDE.md
+  - README.md
+  - LICENSE
