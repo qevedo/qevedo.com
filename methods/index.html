@@ -182,7 +182,7 @@ footer {
       <article class="method">
         <h3>Pauli networks <span class="tag">extended</span></h3>
         <p>A Hamiltonian simulation step is a list of Pauli rotations, each conventionally written with its own CNOT ladders. QCC reads the circuit back as rotations and one Clifford, and builds it again greedily: each controlled-Pauli gate is the one that most lowers the weights of the rotations coming next, so commuting rotations share their CNOTs. It is kept only when it needs no more two-qubit gates and no more gates in all.</p>
-        <p class="effect">One Trotter step of random Hamiltonians: 44% fewer CNOTs than Qiskit at 8 qubits (107 against 191) and 20% at 16 (313 against 393), with 38% and 19% fewer gates in all.</p>
+        <p class="effect">One Trotter step of random Hamiltonians: 47% fewer CNOTs than Qiskit at 8 qubits (101 against 191), 20% at 16 (313 against 393) and 7% at 32 (687 against 740), with 39%, 18% and 15% fewer gates in all (286, 790 and 1511 against 474, 972 and 1789).</p>
         <p class="src">After Rustiq: Goubault de Brugière and Martiel, <a href="https://arxiv.org/abs/2404.03280">arXiv:2404.03280</a>, and pytket's GreedyPauliSimp, whose seeded trials QCC also runs; Clifford synthesis after Bravyi et al., <a href="https://arxiv.org/abs/2105.02291">arXiv:2105.02291</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
       </article>
       <article class="method">
@@ -190,6 +190,12 @@ footer {
         <p>Single-qubit gates are most of what a Pauli network costs. The basis changes that set up each CNOT are not undone after it: the rotations still to come are read in the new frame, which leaves their weights alone, and the frame is paid for once, at the end. Each CNOT is placed whichever way round needs fewer basis changes, and those use √X, native on IBM devices, rather than Hadamards.</p>
         <p class="effect">About half the network's single-qubit gates: on a 16-qubit Hamiltonian, 792 gates in all instead of 1285, against Qiskit's 972 and pytket's 887.</p>
         <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
+      </article>
+      <article class="method">
+        <h3>A charge for local Cliffords, and trials judged one by one <span class="tag">ours</span></h3>
+        <p>The greedy synthesis of a Pauli network charges each candidate CNOT for the single-qubit Cliffords it needs; a hundredth of a weight only breaks ties. Besides its eight seeded trials at that charge, QCC runs four at a tenth of a weight, which give up a few CNOTs for fewer single-qubit gates, and compares every trial with the direct compilation on its own, keeping the first of the cheapest that needs no more two-qubit gates and no more gates in all. Before, only the trial with the fewest CNOTs was compared, and on a 32-qubit Hamiltonian it needed more gates in all, so no network was kept. The usual trials still run, so no circuit can get worse.</p>
+        <p class="effect">32-qubit Hamiltonian: 740 → 687 CNOTs and 1555 → 1511 gates (Qiskit 740 and 1789, pytket 737 and 1681); 8 qubits 107 / 293 → 101 / 286; on a heavy-hex chip at 8 qubits 349 / 713 → 345 / 648 with CX and 331 / 1333 → 310 / 1119 with CZ. On 15 held-out random Hamiltonians, 0.981× the CNOTs and 0.980× the gates, worse on none. It costs 1.3–1.5× the time on Hamiltonians (32 qubits 0.33&nbsp;s → 0.40–0.45&nbsp;s); nothing else changes.</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/passes.rs">passes.rs</a> (<code>network_trials</code>, <code>paying_network</code>) · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
       </article>
       <article class="method">
         <h3>Gate counts without Euler angles <span class="tag">ours</span></h3>

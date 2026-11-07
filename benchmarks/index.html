@@ -209,22 +209,22 @@ footer {
       <table class="results">
         <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC</td><td>0.938×</td><td>0.877×</td><td>7 ms</td></tr>
-          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>16 ms</td></tr>
-          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>1862 ms</td></tr>
-          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>42 ms</td></tr>
+          <tr class="ours"><td>QCC</td><td>0.933×</td><td>0.875×</td><td>7 ms</td></tr>
+          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>11 ms</td></tr>
+          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>1803 ms</td></tr>
+          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>33 ms</td></tr>
         </tbody>
       </table>
     </div>
-    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. On the chip QCC takes about as long as Qiskit with CX (a median of 41&nbsp;ms against 39) and longer with CZ (113&nbsp;ms against 38, where since 0.4.4 it optimizes again until the circuit stops shrinking; the 16-qubit Hamiltonian takes 1.6&nbsp;s against 0.15). Since 0.4.5 it runs independent work side by side on all cores, SABRE's layout trials and the candidate compilations among them (0.51× the time of 0.4.4 on the chip with CX and 0.62× with CZ, on 4 vCPUs), and since 0.4.6 all the pipelines of a compilation share their two-qubit syntheses (0.83× the time of 0.4.5 with CZ), both with byte-identical outputs. without one it is faster on 20 of the 24 circuits, but slower on the Hamiltonians (2.4–12×) and on the 32-qubit Quantum Volume circuit (191&nbsp;ms against 69, medians of nine runs). Version 0.4.3 took 0.73× the time of 0.4.2 on these circuits, with identical outputs.</p>
+    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. On the chip QCC takes about as long as Qiskit with CX (a median of 36&nbsp;ms against 38) and longer with CZ (104&nbsp;ms against 41, where since 0.4.4 it optimizes again until the circuit stops shrinking; the 16-qubit Hamiltonian takes 1.7&nbsp;s against 0.12). Since 0.4.5 it runs independent work side by side on all cores, SABRE's layout trials and the candidate compilations among them (0.51× the time of 0.4.4 on the chip with CX and 0.62× with CZ, on 4 vCPUs), and since 0.4.6 all the pipelines of a compilation share their two-qubit syntheses (0.83× the time of 0.4.5 with CZ), both with byte-identical outputs. Without a chip it is faster on 18 of the 24 circuits, but slower on the Hamiltonians (3.8–27×, where it tries twelve Pauli networks), on Quantum Volume at 16 and 32 qubits (1.8× and 5.0×: 243&nbsp;ms against 49 at 32) and, by under a millisecond, on Clifford+T at 32 (single compilations in the 0.4.7 run). Version 0.4.3 took 0.73× the time of 0.4.2 on these circuits, with identical outputs.</p>
     <div class="table-wrap">
       <table class="results">
         <thead><tr><th>Heavy-hex, 8–16 qubits</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC, CX</td><td>0.935×</td><td>0.825×</td><td>41 ms</td></tr>
-          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>39 ms</td></tr>
-          <tr class="ours"><td>QCC, CZ</td><td>0.908×</td><td>0.848×</td><td>113 ms</td></tr>
-          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>38 ms</td></tr>
+          <tr class="ours"><td>QCC, CX</td><td>0.934×</td><td>0.820×</td><td>36 ms</td></tr>
+          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>38 ms</td></tr>
+          <tr class="ours"><td>QCC, CZ</td><td>0.904×</td><td>0.839×</td><td>104 ms</td></tr>
+          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>41 ms</td></tr>
         </tbody>
       </table>
     </div>
