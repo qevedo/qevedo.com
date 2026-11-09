@@ -274,6 +274,12 @@ footer {
         <p class="effect">With more layout trials, 8% fewer two-qubit gates on a heavy-hex chip: the 16-qubit QFT went from 479 CNOTs to 357, and QCC alone used 5% fewer than Qiskit's level 3 (6.5% with CX since 0.4.2).</p>
         <p class="src">NASSC: Liu, Li and Zhou, <a href="https://arxiv.org/abs/2205.10596">HPCA 2022</a>; SABRE: Li, Ding and Xie, <a href="https://arxiv.org/abs/1809.02573">ASPLOS 2019</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/routing/sabre.rs">sabre.rs</a></p>
       </article>
+      <article class="method">
+        <h3>Cheaper routing, spent on more routings <span class="tag">extended</span></h3>
+        <p>SABRE's result depends a lot on how it breaks ties, so trying more tie-breakings pays, if routing is cheap. QCC's router now builds a circuit's dependency graph and gate matrices once for all its routings, allocates nothing per SWAP, writes out only the routing it keeps and remembers what merging a SWAP into a block saves; it makes exactly the same choices as before. Each layout is then routed 16 times instead of 4. Because the SWAPs' cost is only an estimate of the optimized circuit, the routing the first 4 would have kept is optimized too, and the cheaper kept, so no circuit gets worse.</p>
+        <p class="effect">A routing search takes 2.1–2.9× fewer instructions, with byte-identical outputs. On a heavy-hex chip QCC alone goes from 0.934× to 0.928× Qiskit's two-qubit gates with CX and 0.904× to 0.899× with CZ (Quantum Volume at 16 qubits 822 → 783 CNOTs); on 40 held-out circuits, fewer two-qubit gates on 19 and more on none. 0.86× the time of 0.4.7 with CX, 0.97× with CZ, but 1.37× on the 16-qubit Hamiltonian with CZ.</p>
+        <p class="src">More trials as in LightSABRE: Zou, Treinish, Hartman, Ivrii and Lishman, <a href="https://arxiv.org/abs/2409.08368">arXiv:2409.08368</a>; keeping the narrower search's routing is ours · <a href="https://github.com/qevedo/qcc/blob/master/core/src/routing/sabre.rs">sabre.rs</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/device.rs">device.rs</a></p>
+      </article>
     </div>
   </section>
 
