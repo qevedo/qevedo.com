@@ -176,7 +176,7 @@ footer {
         <a href="/images/benchmarks/nearclifford.svg"><img src="/images/benchmarks/nearclifford.svg" alt="Bar chart: seconds for 1000 shots of random Clifford+T circuits for Qevedo and Qiskit Aer's methods" width="673" height="316" loading="lazy"></a>
       </figure>
       <figure>
-        <figcaption><b>Noisy Clifford+T.</b> Random Clifford+T circuits with depolarizing noise (p&nbsp;=&nbsp;0.001 and 0.01), 10,000 shots on a 4-vCPU VM, the same circuit in both: Clifft is faster on every case, by 3.4–17.8×; at 200 qubits 0.82&nbsp;s against Qevedo's 1.25&nbsp;s on 4 vCPUs. The results agree (chi-square tests of whole distributions, 200,000 shots).</figcaption>
+        <figcaption><b>Noisy Clifford+T.</b> Random Clifford+T circuits with depolarizing noise (p&nbsp;=&nbsp;0.001 and 0.01), 10,000 shots on a 4-vCPU VM, the same circuit in both: Clifft is faster on 9 of 10 cases, by 1.6–3.4×; at 200 qubits Qevedo is 1.10× faster on 4 vCPUs (0.74&nbsp;s against 0.81&nbsp;s) and Clifft 2.4× faster on one. The results agree (chi-square tests of whole distributions, 200,000 shots). <a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/bench_noisy_nearclifford.py">bench_noisy_nearclifford.py</a> · <a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/results/noisy_nearclifford.csv">noisy_nearclifford.csv</a></figcaption>
       </figure>
     </div>
     <div class="bench">
