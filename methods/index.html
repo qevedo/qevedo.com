@@ -280,6 +280,12 @@ footer {
         <p class="effect">A routing search takes 2.1–2.9× fewer instructions, with byte-identical outputs. On a heavy-hex chip QCC alone goes from 0.934× to 0.928× Qiskit's two-qubit gates with CX and 0.904× to 0.899× with CZ (Quantum Volume at 16 qubits 822 → 783 CNOTs); on 40 held-out circuits, fewer two-qubit gates on 19 and more on none. 0.86× the time of 0.4.7 with CX, 0.97× with CZ, but 1.37× on the 16-qubit Hamiltonian with CZ.</p>
         <p class="src">More trials as in LightSABRE: Zou, Treinish, Hartman, Ivrii and Lishman, <a href="https://arxiv.org/abs/2409.08368">arXiv:2409.08368</a>; keeping the narrower search's routing is ours · <a href="https://github.com/qevedo/qcc/blob/master/core/src/routing/sabre.rs">sabre.rs</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/device.rs">device.rs</a></p>
       </article>
+      <article class="method">
+        <h3>Instructions without heap memory <span class="tag">ours</span></h3>
+        <p>The passes copy, relabel and rebuild instructions all the time, and each instruction used to own a name string and lists of qubits and parameters: two or three allocations per copy. Now a known gate's name is a static string and up to three qubits and parameters are stored inline, so copying an instruction allocates nothing. Internal maps hash with FxHash instead of SipHash, and the Python wrapper pauses the cyclic garbage collector while instructions cross to and from the Rust core, whose tens of thousands of short-lived objects set off collections that walked the whole heap.</p>
+        <p class="effect">The 160 benchmark compilations give byte-identical outputs. Allocation went from 27% to 10% of the core's instructions on the 32-qubit Quantum Volume circuit. Against 0.4.8 side by side: 0.85× the time without a chip (Quantum Volume at 32 qubits 149 → 92&nbsp;ms, Qiskit about 50), 0.93× on a heavy-hex chip with CX and 0.83× with CZ.</p>
+        <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/ir.rs">ir.rs</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/hashing.rs">hashing.rs</a> · <a href="https://github.com/qevedo/qcc/blob/master/python/qevedo/compiler/passes/native.py">native.py</a></p>
+      </article>
     </div>
   </section>
 

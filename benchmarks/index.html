@@ -209,22 +209,22 @@ footer {
       <table class="results">
         <thead><tr><th>Compiler</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC</td><td>0.933×</td><td>0.875×</td><td>7 ms</td></tr>
-          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>11 ms</td></tr>
-          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>1803 ms</td></tr>
-          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>33 ms</td></tr>
+          <tr class="ours"><td>QCC</td><td>0.933×</td><td>0.875×</td><td>6 ms</td></tr>
+          <tr><td>Qiskit</td><td>1.000×</td><td>1.000×</td><td>10 ms</td></tr>
+          <tr><td>pytket</td><td>0.998×</td><td>1.093×</td><td>1559 ms</td></tr>
+          <tr><td>UCC</td><td>1.015×</td><td>2.400×</td><td>31 ms</td></tr>
         </tbody>
       </table>
     </div>
-    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. Since 0.4.8 it routes each layout 16 times rather than 4, and also optimizes the routing the first 4 would have kept, so no circuit gets worse: Quantum Volume at 16 qubits went from 822 to 783 two-qubit gates (Qiskit 828), Clifford+T at 16 from 752 to 733 with CX and 708 to 692 with CZ, the 16-qubit Hamiltonian from 1368 to 1336 with CX and 1292 to 1256 with CZ. SABRE itself got 2–3× cheaper in the same release, with the same choices, so this costs little: 0.86× the time of 0.4.7 with CX and 0.97× with CZ. On the chip QCC takes about as long as Qiskit with CX (a median of 32&nbsp;ms against 34) and longer with CZ (111&nbsp;ms against 36, where since 0.4.4 it optimizes again until the circuit stops shrinking; the 16-qubit Hamiltonian takes 2.6&nbsp;s against 0.13, 1.37× as long as with 0.4.7 because both routings go through those rounds). QCC still uses more two-qubit gates than Qiskit on one circuit, Quantum Volume at 8 qubits (111 against 108), where Qiskit itself gives 108 or 111 depending on its seed. Since 0.4.5 it runs independent work side by side on all cores, SABRE's layout trials and the candidate compilations among them (0.51× the time of 0.4.4 on the chip with CX and 0.62× with CZ, on 4 vCPUs), and since 0.4.6 all the pipelines of a compilation share their two-qubit syntheses (0.83× the time of 0.4.5 with CZ), both with byte-identical outputs. Without a chip it is faster on 18 of the 24 circuits, but slower on the Hamiltonians (3.8–27×, where it tries twelve Pauli networks), on Quantum Volume at 16 and 32 qubits (1.8× and 5.0×: 243&nbsp;ms against 49 at 32) and, by under a millisecond, on Clifford+T at 32 (single compilations in the 0.4.7 run). Version 0.4.3 took 0.73× the time of 0.4.2 on these circuits, with identical outputs.</p>
+    <p><b>On a chip.</b> Compiled for a 19-qubit heavy-hex chip, QCC lays out and routes the circuit itself: with no SWAP when the circuit fits, otherwise with SABRE counting each SWAP for what it costs once merged with its neighbours. Since 0.4.8 it routes each layout 16 times rather than 4, and also optimizes the routing the first 4 would have kept, so no circuit gets worse: Quantum Volume at 16 qubits went from 822 to 783 two-qubit gates (Qiskit 828), Clifford+T at 16 from 752 to 733 with CX and 708 to 692 with CZ, the 16-qubit Hamiltonian from 1368 to 1336 with CX and 1292 to 1256 with CZ. SABRE itself got 2–3× cheaper in the same release, with the same choices, so this costs little: 0.86× the time of 0.4.7 with CX and 0.97× with CZ. On the chip QCC is faster than Qiskit with CX (a median of 24&nbsp;ms against 31) and slower with CZ (77&nbsp;ms against 32, where since 0.4.4 it optimizes again until the circuit stops shrinking; the 16-qubit Hamiltonian takes 1.4&nbsp;s against 0.12). QCC still uses more two-qubit gates than Qiskit on one circuit, Quantum Volume at 8 qubits (111 against 108), where Qiskit itself gives 108 or 111 depending on its seed. Since 0.4.5 it runs independent work side by side on all cores, SABRE's layout trials and the candidate compilations among them (0.51× the time of 0.4.4 on the chip with CX and 0.62× with CZ, on 4 vCPUs), and since 0.4.6 all the pipelines of a compilation share their two-qubit syntheses (0.83× the time of 0.4.5 with CZ), both with byte-identical outputs. Without a chip it is faster on 20 of the 24 circuits, but slower on the Hamiltonians (1.1–20×, where it tries twelve Pauli networks) and on Quantum Volume at 32 qubits (89&nbsp;ms against 50; single compilations in the 0.4.9 run). Version 0.4.9 takes 0.85× the time of 0.4.8 without a chip (Quantum Volume at 32 qubits 149 → 92&nbsp;ms, side by side), 0.93× on the chip with CX and 0.83× with CZ, with identical outputs; 0.4.3 took 0.73× the time of 0.4.2.</p>
     <div class="table-wrap">
       <table class="results">
         <thead><tr><th>Heavy-hex, 8–16 qubits</th><th>2q gates</th><th>All gates</th><th>Time</th></tr></thead>
         <tbody>
-          <tr class="ours"><td>QCC, CX</td><td>0.928×</td><td>0.818×</td><td>32 ms</td></tr>
-          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>34 ms</td></tr>
-          <tr class="ours"><td>QCC, CZ</td><td>0.899×</td><td>0.834×</td><td>111 ms</td></tr>
-          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>36 ms</td></tr>
+          <tr class="ours"><td>QCC, CX</td><td>0.928×</td><td>0.818×</td><td>24 ms</td></tr>
+          <tr><td>Qiskit, CX</td><td>1.000×</td><td>1.000×</td><td>31 ms</td></tr>
+          <tr class="ours"><td>QCC, CZ</td><td>0.899×</td><td>0.834×</td><td>77 ms</td></tr>
+          <tr><td>Qiskit, CZ</td><td>1.000×</td><td>1.000×</td><td>32 ms</td></tr>
         </tbody>
       </table>
     </div>
