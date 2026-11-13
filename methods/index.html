@@ -286,6 +286,12 @@ footer {
         <p class="effect">The 160 benchmark compilations give byte-identical outputs. Allocation went from 27% to 10% of the core's instructions on the 32-qubit Quantum Volume circuit. Against 0.4.8 side by side: 0.85× the time without a chip (Quantum Volume at 32 qubits 149 → 92&nbsp;ms, Qiskit about 50), 0.93× on a heavy-hex chip with CX and 0.83× with CZ.</p>
         <p class="src"><a href="https://github.com/qevedo/qcc/blob/master/core/src/ir.rs">ir.rs</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/hashing.rs">hashing.rs</a> · <a href="https://github.com/qevedo/qcc/blob/master/python/qevedo/compiler/passes/native.py">native.py</a></p>
       </article>
+      <article class="method">
+        <h3>Pauli-network scoring from tables <span class="tag">ours</span></h3>
+        <p>For every CNOT it places, the greedy Pauli-network synthesis scores nine candidate gates (σ on one qubit controlling τ on the other) on up to 64 pairs of qubits, and it used to apply each candidate's gates to the letters of every rotation ahead. What a candidate does to the letters of its two qubits is the same on any pair, so each is now a table of what becomes of the 16 letter pairs, worked out once, and the nine scores are summed in one pass in their old order, so they are the same numbers. Moving gates through symmetric blocks also keeps its KAK decompositions by the block's matrix: most blocks are a lone CNOT.</p>
+        <p class="effect">142 compilations (the benchmark circuits with and without a chip, inside Qiskit, and 15 held-out Hamiltonians) give byte-identical outputs. On the 32-qubit Hamiltonian the core runs 3.4 billion instructions instead of 14.4. Against 0.4.9 side by side, the Hamiltonians take 0.59× / 0.37× / 0.32× the time at 8 / 16 / 32 qubits with CX (340 → 110&nbsp;ms at 32; Qiskit about 23) and 0.71× / 0.52× / 0.42× with CZ; on the heavy-hex chip, where routing and the CZ rounds dominate, 0.96×.</p>
+        <p class="src">The synthesis follows Rustiq (Goubault de Brugière and Martiel) and pytket's GreedyPauliSimp; the tables are ours · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/symmetric_blocks.rs">symmetric_blocks.rs</a> · <a href="https://github.com/qevedo/qcc/blob/master/benchmarks/compilation/run.py">run.py</a></p>
+      </article>
     </div>
   </section>
 
