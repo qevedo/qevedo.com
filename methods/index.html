@@ -177,7 +177,8 @@ footer {
       <article class="method">
         <h3>Rotation merging through Cliffords <span class="tag">published</span></h3>
         <p>Phase folding stops at Hadamards. Moved through every Clifford gate before it with a stabilizer tableau, each Z rotation is a rotation about a Pauli string, and rotations about the same string merge whenever everything between them commutes with it.</p>
-        <p class="src">Zhang and Chen, <a href="https://arxiv.org/abs/1903.12456">arXiv:1903.12456</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a></p>
+        <p class="effect">Since 0.4.12 the tableau takes each gate in one update, where a √X, a CZ or an X used to be three or four (H S H, H CX H, H S S H): the same outputs, byte for byte, with rotation merging 41% cheaper on a CZ chip compilation of the 16-qubit Hamiltonian (1.37 → 0.81 billion instructions). That made CZ compilations 0.97–0.98× the time; the 16-qubit Hamiltonian on a heavy-hex chip still takes 2.6&nbsp;s, against Qiskit's 0.11–0.15&nbsp;s, most of it in rounds of the whole pipeline.</p>
+        <p class="src">Zhang and Chen, <a href="https://arxiv.org/abs/1903.12456">arXiv:1903.12456</a> · <a href="https://github.com/qevedo/qcc/blob/master/core/src/pauli_network.rs">pauli_network.rs</a> (<code>apply_all_to_map</code>)</p>
       </article>
       <article class="method">
         <h3>Pauli networks <span class="tag">extended</span></h3>
