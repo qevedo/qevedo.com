@@ -413,6 +413,12 @@ footer {
         <p class="effect">Noisy Clifford+T cases take 0.222–0.596 of the time they took before (100 qubits at p&nbsp;=&nbsp;10⁻³ on one thread: 0.149 → 0.033&nbsp;s; 24 qubits: 0.022 → 0.009&nbsp;s), with the same counts for the same seed; one-shot runs cost what they did.</p>
         <p class="src"><a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/compare_noisy_builds.py">compare_noisy_builds.py</a> · <a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/results/noisy_nearclifford_before_after.csv">noisy_nearclifford_before_after.csv</a> · <a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/results/noisy_nearclifford_sweep.csv">noisy_nearclifford_sweep.csv</a></p>
       </article>
+      <article class="method">
+        <h3>Fewer fixed costs per noiseless measurement <span class="tag">ours</span></h3>
+        <p>Without noise, the final measurements also split groups of shots by outcome down to single shots: about 98,000 measurements of the dense part in a 10,000-shot run of a 100-qubit circuit, nearly all on one shot, so their fixed costs outweighed the kernels. Every pending measurement used to be classified before each one; now the scan stops at the first that acts on the dense part, and classifying reads the frame's bits without allocating. A measurement pulls its Pauli back through the frame once instead of several times, and a split writes both outcomes' dense states in one pass over the parent instead of reading it twice.</p>
+        <p class="effect">The noiseless 100-qubit, 24-T example takes 0.835 of the time it took before at 1000 shots, 0.622 at 10,000 and 0.511 at 100,000 (4 vCPUs, including the gates), with the same counts for the same seed. Each new dense state still takes fresh memory, whose page faults are a large part of what is left at 1000 shots.</p>
+        <p class="src"><a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/compare_examples.py">compare_examples.py</a> · <a href="https://github.com/qevedo/qevedo-simulator/blob/master/benchmarks/results/examples_before_after_recheck.csv">examples_before_after_recheck.csv</a> · <a href="https://github.com/qevedo/qevedo-simulator/blob/master/docs/improvement-log.md">improvement-log.md</a> (2026-11-18)</p>
+      </article>
     </div>
   </section>
 
